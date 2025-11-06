@@ -1,0 +1,37 @@
+import {moderateScale} from '../Utils/ScaleUtils';
+
+const size = {
+  h1: moderateScale(1),
+  h2: moderateScale(2),
+  h3: moderateScale(3),
+  h4: moderateScale(4),
+  h5: moderateScale(5),
+  h6: moderateScale(6),
+  h7: moderateScale(7),
+  h8: moderateScale(8),
+  h9: moderateScale(9),
+  h10: moderateScale(10),
+  h11: moderateScale(11),
+  h12: moderateScale(12),
+  h13: moderateScale(13),
+  h14: moderateScale(14),
+  h15: moderateScale(15),
+  h16: moderateScale(16),
+  h17: moderateScale(17),
+  h18: moderateScale(18),
+  h19: moderateScale(19),
+  h20: moderateScale(20),
+  h21: moderateScale(21),
+  h22: moderateScale(22),
+  h23: moderateScale(23),
+  h24: moderateScale(24),
+  h25: moderateScale(25),
+  h26: moderateScale(26),
+  h27: moderateScale(27),
+  h28: moderateScale(28),
+  h29: moderateScale(29),
+  h30: moderateScale(30),
+  h36: moderateScale(36),
+};
+
+export default {size};

@@ -1,0 +1,33 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "app/assets/fonts/TikTokSans-Black.ttf",
+      "sha1": "04c5f1ecb34cc00eaa648fab99e4b3986136410e"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-Bold.ttf",
+      "sha1": "98ae5d22ae6c1923f27da248a9a5f71e43328957"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-ExtraBold.ttf",
+      "sha1": "89962036317597438213238dd6b17491a3016380"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-Light.ttf",
+      "sha1": "01fa4359c2535651cce71ce4fc25c85d577a1b7a"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-Medium.ttf",
+      "sha1": "d56a01ae99cd90b2e420bc53f6a32b04866f36d4"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-Regular.ttf",
+      "sha1": "f2e27de86369d4e2b0be307de51bd105501e8a16"
+    },
+    {
+      "path": "app/assets/fonts/TikTokSans-SemiBold.ttf",
+      "sha1": "898bb3ed121aad07fdf14b17a9c6682d706dc5b0"
+    }
+  ]
+}

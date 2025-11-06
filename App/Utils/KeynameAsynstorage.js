@@ -1,0 +1,10 @@
+export const IS_SHOW_ONBOARDING = 'isShowOnboarding';
+export const IS_AUTO_LOGIN = 'isAutoLoginAgain';
+export const IS_REMEMBER_LOGIN = 'isRememberLogin';
+export const PHONENUMBER = 'phonenumber';
+export const PASSWORD = 'password';
+export const TOKEN_ACCOUNT = 'token_account';
+export const DATABASE_APP = 'database_app';
+export const TOKEN_SOCKET = "token_socket";
+export const LINK_CONNET = 'LINK_CONNET';
+export const ONE_SIGNAL_APP_ID = 'ONE_SIGNAL_APP_ID';
