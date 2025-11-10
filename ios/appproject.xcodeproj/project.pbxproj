@@ -23,9 +23,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* appproject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "appproject.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = "appproject/Images.xcassets"; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = "appproject/Info.plist"; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* appproject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = appproject.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = appproject/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = appproject/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = appproject/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		22C4CC265D794DC99E82ABA7 /* TikTokSans-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "TikTokSans-Light.ttf"; path = "../app/assets/fonts/TikTokSans-Light.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-appproject.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-appproject.debug.xcconfig"; path = "Target Support Files/Pods-appproject/Pods-appproject.debug.xcconfig"; sourceTree = "<group>"; };
@@ -34,7 +34,7 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-appproject.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-appproject.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		65194BA2916E4869BC9ADECC /* TikTokSans-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "TikTokSans-ExtraBold.ttf"; path = "../app/assets/fonts/TikTokSans-ExtraBold.ttf"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = appproject/AppDelegate.swift; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = "appproject/LaunchScreen.storyboard"; sourceTree = "<group>"; };
+		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = appproject/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C27B79EFCA134090A7A5B520 /* TikTokSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "TikTokSans-Regular.ttf"; path = "../app/assets/fonts/TikTokSans-Regular.ttf"; sourceTree = "<group>"; };
 		CE7854E32EA1D880009C5D3D /* PublicSans-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PublicSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 		CE7854E52EA1D880009C5D3D /* PublicSans-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PublicSans-ExtraBoldItalic.ttf"; sourceTree = "<group>"; };
@@ -78,7 +78,7 @@
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 			);
-			name = "appproject";
+			name = appproject;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -177,8 +177,8 @@
 			);
 			dependencies = (
 			);
-			name = "appproject";
-			productName = "appproject";
+			name = appproject;
+			productName = appproject;
 			productReference = 13B07F961A680F5B00A75B9A /* appproject.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -460,8 +460,7 @@
 					"\"$(PODS_ROOT)/Headers/Private/Yoga\"",
 					"\"$(PODS_ROOT)/Headers/Private/VisionCamera\"/**",
 				);
-				INFOPLIST_FILE = "appproject/Info.plist";
-             INFOPLIST_KEY_CFBundleDisplayName = "app_project";
+				INFOPLIST_FILE = appproject/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = appproject;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -475,7 +474,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = vn.appproject;
-				PRODUCT_NAME = "appproject";
+				PRODUCT_NAME = appproject;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -620,8 +619,7 @@
 					"\"$(PODS_ROOT)/Headers/Private/Yoga\"",
 					"\"$(PODS_ROOT)/Headers/Private/VisionCamera\"/**",
 				);
-				INFOPLIST_FILE = "appproject/Info.plist";
-             INFOPLIST_KEY_CFBundleDisplayName = "app_project";
+				INFOPLIST_FILE = appproject/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = appproject;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -635,7 +633,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = vn.appproject;
-				PRODUCT_NAME = "appproject";
+				PRODUCT_NAME = appproject;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

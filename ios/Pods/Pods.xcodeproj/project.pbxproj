@@ -3529,7 +3529,7 @@
 		46EB2E000269E0 /* RNSplashScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E000135B0 /* RNSplashScreen.m */; };
 		46EB2E000269F0 /* RNSplashScreen.h in Headers */ = {isa = PBXBuildFile; fileRef = 46EB2E000135A0 /* RNSplashScreen.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		46EB2E00026A50 /* react-native-splash-screen-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E00026A40 /* react-native-splash-screen-dummy.m */; };
-		46EB2E00026B60 /* Pods-m4uapp-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E00026B50 /* Pods-m4uapp-dummy.m */; };
+		46EB2E00026B60 /* Pods-appproject-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 46EB2E00026B50 /* Pods-appproject-dummy.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -11537,7 +11537,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		02DB1B2409F2B7C57652DD91EDD40E3F /* Pods-m4uapp */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "Pods-m4uapp"; path = "libPods-m4uapp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B78B62C0667993F995391A857DB2CE2 /* React-domnativemodule */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-domnativemodule"; path = "libReact-domnativemodule.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0CEF74A24ECE8AEEF7B1E27B305D2DDC /* ReactCodegen */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = ReactCodegen; path = libReactCodegen.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1381503C42FFF460E946860A32A6F981 /* React-RuntimeApple */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-RuntimeApple"; path = "libReact-RuntimeApple.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -16712,13 +16711,13 @@
 		46EB2E00026A20 /* react-native-splash-screen.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "react-native-splash-screen.release.xcconfig"; sourceTree = "<group>"; };
 		46EB2E00026A30 /* react-native-splash-screen-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "react-native-splash-screen-prefix.pch"; sourceTree = "<group>"; };
 		46EB2E00026A40 /* react-native-splash-screen-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "react-native-splash-screen-dummy.m"; sourceTree = "<group>"; };
-		46EB2E00026AF0 /* Pods-m4uapp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-m4uapp.release.xcconfig"; sourceTree = "<group>"; };
-		46EB2E00026B00 /* Pods-m4uapp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-m4uapp.debug.xcconfig"; sourceTree = "<group>"; };
-		46EB2E00026B10 /* Pods-m4uapp-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-m4uapp-frameworks.sh"; sourceTree = "<group>"; };
-		46EB2E00026B20 /* Pods-m4uapp-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-m4uapp-resources.sh"; sourceTree = "<group>"; };
-		46EB2E00026B30 /* Pods-m4uapp-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-m4uapp-acknowledgements.plist"; sourceTree = "<group>"; };
-		46EB2E00026B40 /* Pods-m4uapp-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-m4uapp-acknowledgements.markdown"; sourceTree = "<group>"; };
-		46EB2E00026B50 /* Pods-m4uapp-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-m4uapp-dummy.m"; sourceTree = "<group>"; };
+		46EB2E00026AF0 /* Pods-appproject.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-appproject.release.xcconfig"; sourceTree = "<group>"; };
+		46EB2E00026B00 /* Pods-appproject.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-appproject.debug.xcconfig"; sourceTree = "<group>"; };
+		46EB2E00026B10 /* Pods-appproject-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-appproject-frameworks.sh"; sourceTree = "<group>"; };
+		46EB2E00026B20 /* Pods-appproject-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-appproject-resources.sh"; sourceTree = "<group>"; };
+		46EB2E00026B30 /* Pods-appproject-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-appproject-acknowledgements.plist"; sourceTree = "<group>"; };
+		46EB2E00026B40 /* Pods-appproject-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-appproject-acknowledgements.markdown"; sourceTree = "<group>"; };
+		46EB2E00026B50 /* Pods-appproject-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-appproject-dummy.m"; sourceTree = "<group>"; };
 		4CC54C79E5C34490D96A7411A3DA9565 /* RNPermissions-RNPermissionsPrivacyInfo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = "RNPermissions-RNPermissionsPrivacyInfo"; path = RNPermissionsPrivacyInfo.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F3E9C98444FA55E416B857143C48013 /* React-RuntimeHermes */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-RuntimeHermes"; path = "libReact-RuntimeHermes.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		50B5347C9A6E93B7D4CFC3673BA6FB7E /* RNScreens */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = RNScreens; path = libRNScreens.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -16780,6 +16779,7 @@
 		EAC1043855D4BC57C81DD807D3BB1FF8 /* React-defaultsnativemodule */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-defaultsnativemodule"; path = "libReact-defaultsnativemodule.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EACF6B749B976F4AB08693B5D480B1D6 /* React-idlecallbacksnativemodule */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-idlecallbacksnativemodule"; path = "libReact-idlecallbacksnativemodule.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EEDBF403E8E0B3885E65C2741B536BC5 /* React-RCTImage */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-RCTImage"; path = "libReact-RCTImage.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F087D093B26DC9EC7EEC9BEBE399BBCE /* Pods-appproject */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "Pods-appproject"; path = "libPods-appproject.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2E7C88DFCD460A4B46B913ADEB8A641 /* React-jsiexecutor */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "React-jsiexecutor"; path = "libReact-jsiexecutor.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4BDA69E3BCB0166D49FB679ABADCA00 /* fmt */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = fmt; path = libfmt.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6B923B5A106791D9D52196A67E572B3 /* react-native-splash-screen */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = "react-native-splash-screen"; path = "libreact-native-splash-screen.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -17463,7 +17463,7 @@
 				3CA7A9404CCDD6BA22C97F8348CE3209 /* glog */,
 				FFDAD994FE728F76EC459CC05E0CCDFB /* glog-glog_privacy */,
 				5E4674603A5D5B9215FFA0F8E69F8B71 /* libwebp */,
-				02DB1B2409F2B7C57652DD91EDD40E3F /* Pods-m4uapp */,
+				F087D093B26DC9EC7EEC9BEBE399BBCE /* Pods-appproject */,
 				1936453FF2A7E3A13063C4917C4D5598 /* RCT-Folly */,
 				BA6198501C8FE4824D863DC9EF32C614 /* RCT-Folly-RCT-Folly_privacy */,
 				33EEBF1D210254B5452CE560F81C9D38 /* RCTDeprecation */,
@@ -17562,7 +17562,7 @@
 		46EB2E00000070 /* Targets Support Files */ = {
 			isa = PBXGroup;
 			children = (
-				46EB2E00026AE0 /* Pods-m4uapp */,
+				46EB2E00026AE0 /* Pods-appproject */,
 			);
 			name = "Targets Support Files";
 			sourceTree = "<group>";
@@ -27544,19 +27544,19 @@
 			path = "../../ios/Pods/Target Support Files/react-native-splash-screen";
 			sourceTree = "<group>";
 		};
-		46EB2E00026AE0 /* Pods-m4uapp */ = {
+		46EB2E00026AE0 /* Pods-appproject */ = {
 			isa = PBXGroup;
 			children = (
-				46EB2E00026B40 /* Pods-m4uapp-acknowledgements.markdown */,
-				46EB2E00026B30 /* Pods-m4uapp-acknowledgements.plist */,
-				46EB2E00026B50 /* Pods-m4uapp-dummy.m */,
-				46EB2E00026B10 /* Pods-m4uapp-frameworks.sh */,
-				46EB2E00026B20 /* Pods-m4uapp-resources.sh */,
-				46EB2E00026B00 /* Pods-m4uapp.debug.xcconfig */,
-				46EB2E00026AF0 /* Pods-m4uapp.release.xcconfig */,
+				46EB2E00026B40 /* Pods-appproject-acknowledgements.markdown */,
+				46EB2E00026B30 /* Pods-appproject-acknowledgements.plist */,
+				46EB2E00026B50 /* Pods-appproject-dummy.m */,
+				46EB2E00026B10 /* Pods-appproject-frameworks.sh */,
+				46EB2E00026B20 /* Pods-appproject-resources.sh */,
+				46EB2E00026B00 /* Pods-appproject.debug.xcconfig */,
+				46EB2E00026AF0 /* Pods-appproject.release.xcconfig */,
 			);
-			name = "Pods-m4uapp";
-			path = "Target Support Files/Pods-m4uapp";
+			name = "Pods-appproject";
+			path = "Target Support Files/Pods-appproject";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -32175,6 +32175,115 @@
 			productReference = 8F65F9361F2069CF9E9D751272968DE4 /* RNGestureHandler */;
 			productType = "com.apple.product-type.library.static";
 		};
+		BD66F6B17CB09E70CADDEC44BC99DEA5 /* Pods-appproject */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 46EB2E00026A70 /* Build configuration list for PBXNativeTarget "Pods-appproject" */;
+			buildPhases = (
+				46EB2E00026AB0 /* Headers */,
+				46EB2E00026AC0 /* Sources */,
+				46EB2E00026AD0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				46EB2E00026BD0 /* PBXTargetDependency */,
+				46EB2E00026BF0 /* PBXTargetDependency */,
+				46EB2E00026C10 /* PBXTargetDependency */,
+				46EB2E00026C30 /* PBXTargetDependency */,
+				46EB2E00026C50 /* PBXTargetDependency */,
+				46EB2E00026C70 /* PBXTargetDependency */,
+				46EB2E00026C90 /* PBXTargetDependency */,
+				46EB2E00026CB0 /* PBXTargetDependency */,
+				46EB2E00026CD0 /* PBXTargetDependency */,
+				46EB2E00026CF0 /* PBXTargetDependency */,
+				46EB2E00026D10 /* PBXTargetDependency */,
+				46EB2E00026D30 /* PBXTargetDependency */,
+				46EB2E00026D50 /* PBXTargetDependency */,
+				46EB2E00026D70 /* PBXTargetDependency */,
+				46EB2E00026D90 /* PBXTargetDependency */,
+				46EB2E00026DB0 /* PBXTargetDependency */,
+				46EB2E00026DD0 /* PBXTargetDependency */,
+				46EB2E00026DF0 /* PBXTargetDependency */,
+				46EB2E00026E10 /* PBXTargetDependency */,
+				46EB2E00026E30 /* PBXTargetDependency */,
+				46EB2E00026E50 /* PBXTargetDependency */,
+				46EB2E00026E70 /* PBXTargetDependency */,
+				46EB2E00026E90 /* PBXTargetDependency */,
+				46EB2E00026EB0 /* PBXTargetDependency */,
+				46EB2E00026ED0 /* PBXTargetDependency */,
+				46EB2E00026EF0 /* PBXTargetDependency */,
+				46EB2E00026F10 /* PBXTargetDependency */,
+				46EB2E00026F30 /* PBXTargetDependency */,
+				46EB2E00026F50 /* PBXTargetDependency */,
+				46EB2E00026F70 /* PBXTargetDependency */,
+				46EB2E00026F90 /* PBXTargetDependency */,
+				46EB2E00026FB0 /* PBXTargetDependency */,
+				46EB2E00026FD0 /* PBXTargetDependency */,
+				46EB2E00026FF0 /* PBXTargetDependency */,
+				46EB2E00027010 /* PBXTargetDependency */,
+				46EB2E00027030 /* PBXTargetDependency */,
+				46EB2E00027050 /* PBXTargetDependency */,
+				46EB2E00027070 /* PBXTargetDependency */,
+				46EB2E00027090 /* PBXTargetDependency */,
+				46EB2E000270B0 /* PBXTargetDependency */,
+				46EB2E000270D0 /* PBXTargetDependency */,
+				46EB2E000270F0 /* PBXTargetDependency */,
+				46EB2E00027110 /* PBXTargetDependency */,
+				46EB2E00027130 /* PBXTargetDependency */,
+				46EB2E00027150 /* PBXTargetDependency */,
+				46EB2E00027170 /* PBXTargetDependency */,
+				46EB2E00027190 /* PBXTargetDependency */,
+				46EB2E000271B0 /* PBXTargetDependency */,
+				46EB2E000271D0 /* PBXTargetDependency */,
+				46EB2E000271F0 /* PBXTargetDependency */,
+				46EB2E00027210 /* PBXTargetDependency */,
+				46EB2E00027230 /* PBXTargetDependency */,
+				46EB2E00027250 /* PBXTargetDependency */,
+				46EB2E00027270 /* PBXTargetDependency */,
+				46EB2E00027290 /* PBXTargetDependency */,
+				46EB2E000272B0 /* PBXTargetDependency */,
+				46EB2E000272D0 /* PBXTargetDependency */,
+				46EB2E000272F0 /* PBXTargetDependency */,
+				46EB2E00027310 /* PBXTargetDependency */,
+				46EB2E00027330 /* PBXTargetDependency */,
+				46EB2E00027350 /* PBXTargetDependency */,
+				46EB2E00027370 /* PBXTargetDependency */,
+				46EB2E00027390 /* PBXTargetDependency */,
+				46EB2E000273B0 /* PBXTargetDependency */,
+				46EB2E000273D0 /* PBXTargetDependency */,
+				46EB2E000273F0 /* PBXTargetDependency */,
+				46EB2E00027410 /* PBXTargetDependency */,
+				46EB2E00027430 /* PBXTargetDependency */,
+				46EB2E00027450 /* PBXTargetDependency */,
+				46EB2E00027470 /* PBXTargetDependency */,
+				46EB2E00027490 /* PBXTargetDependency */,
+				46EB2E000274B0 /* PBXTargetDependency */,
+				46EB2E000274D0 /* PBXTargetDependency */,
+				46EB2E000274F0 /* PBXTargetDependency */,
+				46EB2E00027510 /* PBXTargetDependency */,
+				46EB2E00027530 /* PBXTargetDependency */,
+				46EB2E00027550 /* PBXTargetDependency */,
+				46EB2E00027570 /* PBXTargetDependency */,
+				46EB2E00027590 /* PBXTargetDependency */,
+				46EB2E000275B0 /* PBXTargetDependency */,
+				46EB2E000275D0 /* PBXTargetDependency */,
+				46EB2E000275F0 /* PBXTargetDependency */,
+				46EB2E00027610 /* PBXTargetDependency */,
+				46EB2E00027630 /* PBXTargetDependency */,
+				46EB2E00027650 /* PBXTargetDependency */,
+				46EB2E00027670 /* PBXTargetDependency */,
+				46EB2E00027690 /* PBXTargetDependency */,
+				46EB2E000276B0 /* PBXTargetDependency */,
+				46EB2E000276D0 /* PBXTargetDependency */,
+				46EB2E000276F0 /* PBXTargetDependency */,
+				46EB2E00027710 /* PBXTargetDependency */,
+				46EB2E00027730 /* PBXTargetDependency */,
+			);
+			name = "Pods-appproject";
+			productName = "Pods-appproject";
+			productReference = F087D093B26DC9EC7EEC9BEBE399BBCE /* Pods-appproject */;
+			productType = "com.apple.product-type.library.static";
+		};
 		BD9A27D8398DEB3205D3F8937B0672A0 /* react-native-safe-area-context */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 46EB2E00026680 /* Build configuration list for PBXNativeTarget "react-native-safe-area-context" */;
@@ -32728,115 +32837,6 @@
 			productReference = 2577F299FCB0A19824FE989BE77B8E8F /* React-jsinspector */;
 			productType = "com.apple.product-type.library.static";
 		};
-		FA7C8164C4CD671A3476363474B0765C /* Pods-m4uapp */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 46EB2E00026A70 /* Build configuration list for PBXNativeTarget "Pods-m4uapp" */;
-			buildPhases = (
-				46EB2E00026AB0 /* Headers */,
-				46EB2E00026AC0 /* Sources */,
-				46EB2E00026AD0 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				46EB2E00026BD0 /* PBXTargetDependency */,
-				46EB2E00026BF0 /* PBXTargetDependency */,
-				46EB2E00026C10 /* PBXTargetDependency */,
-				46EB2E00026C30 /* PBXTargetDependency */,
-				46EB2E00026C50 /* PBXTargetDependency */,
-				46EB2E00026C70 /* PBXTargetDependency */,
-				46EB2E00026C90 /* PBXTargetDependency */,
-				46EB2E00026CB0 /* PBXTargetDependency */,
-				46EB2E00026CD0 /* PBXTargetDependency */,
-				46EB2E00026CF0 /* PBXTargetDependency */,
-				46EB2E00026D10 /* PBXTargetDependency */,
-				46EB2E00026D30 /* PBXTargetDependency */,
-				46EB2E00026D50 /* PBXTargetDependency */,
-				46EB2E00026D70 /* PBXTargetDependency */,
-				46EB2E00026D90 /* PBXTargetDependency */,
-				46EB2E00026DB0 /* PBXTargetDependency */,
-				46EB2E00026DD0 /* PBXTargetDependency */,
-				46EB2E00026DF0 /* PBXTargetDependency */,
-				46EB2E00026E10 /* PBXTargetDependency */,
-				46EB2E00026E30 /* PBXTargetDependency */,
-				46EB2E00026E50 /* PBXTargetDependency */,
-				46EB2E00026E70 /* PBXTargetDependency */,
-				46EB2E00026E90 /* PBXTargetDependency */,
-				46EB2E00026EB0 /* PBXTargetDependency */,
-				46EB2E00026ED0 /* PBXTargetDependency */,
-				46EB2E00026EF0 /* PBXTargetDependency */,
-				46EB2E00026F10 /* PBXTargetDependency */,
-				46EB2E00026F30 /* PBXTargetDependency */,
-				46EB2E00026F50 /* PBXTargetDependency */,
-				46EB2E00026F70 /* PBXTargetDependency */,
-				46EB2E00026F90 /* PBXTargetDependency */,
-				46EB2E00026FB0 /* PBXTargetDependency */,
-				46EB2E00026FD0 /* PBXTargetDependency */,
-				46EB2E00026FF0 /* PBXTargetDependency */,
-				46EB2E00027010 /* PBXTargetDependency */,
-				46EB2E00027030 /* PBXTargetDependency */,
-				46EB2E00027050 /* PBXTargetDependency */,
-				46EB2E00027070 /* PBXTargetDependency */,
-				46EB2E00027090 /* PBXTargetDependency */,
-				46EB2E000270B0 /* PBXTargetDependency */,
-				46EB2E000270D0 /* PBXTargetDependency */,
-				46EB2E000270F0 /* PBXTargetDependency */,
-				46EB2E00027110 /* PBXTargetDependency */,
-				46EB2E00027130 /* PBXTargetDependency */,
-				46EB2E00027150 /* PBXTargetDependency */,
-				46EB2E00027170 /* PBXTargetDependency */,
-				46EB2E00027190 /* PBXTargetDependency */,
-				46EB2E000271B0 /* PBXTargetDependency */,
-				46EB2E000271D0 /* PBXTargetDependency */,
-				46EB2E000271F0 /* PBXTargetDependency */,
-				46EB2E00027210 /* PBXTargetDependency */,
-				46EB2E00027230 /* PBXTargetDependency */,
-				46EB2E00027250 /* PBXTargetDependency */,
-				46EB2E00027270 /* PBXTargetDependency */,
-				46EB2E00027290 /* PBXTargetDependency */,
-				46EB2E000272B0 /* PBXTargetDependency */,
-				46EB2E000272D0 /* PBXTargetDependency */,
-				46EB2E000272F0 /* PBXTargetDependency */,
-				46EB2E00027310 /* PBXTargetDependency */,
-				46EB2E00027330 /* PBXTargetDependency */,
-				46EB2E00027350 /* PBXTargetDependency */,
-				46EB2E00027370 /* PBXTargetDependency */,
-				46EB2E00027390 /* PBXTargetDependency */,
-				46EB2E000273B0 /* PBXTargetDependency */,
-				46EB2E000273D0 /* PBXTargetDependency */,
-				46EB2E000273F0 /* PBXTargetDependency */,
-				46EB2E00027410 /* PBXTargetDependency */,
-				46EB2E00027430 /* PBXTargetDependency */,
-				46EB2E00027450 /* PBXTargetDependency */,
-				46EB2E00027470 /* PBXTargetDependency */,
-				46EB2E00027490 /* PBXTargetDependency */,
-				46EB2E000274B0 /* PBXTargetDependency */,
-				46EB2E000274D0 /* PBXTargetDependency */,
-				46EB2E000274F0 /* PBXTargetDependency */,
-				46EB2E00027510 /* PBXTargetDependency */,
-				46EB2E00027530 /* PBXTargetDependency */,
-				46EB2E00027550 /* PBXTargetDependency */,
-				46EB2E00027570 /* PBXTargetDependency */,
-				46EB2E00027590 /* PBXTargetDependency */,
-				46EB2E000275B0 /* PBXTargetDependency */,
-				46EB2E000275D0 /* PBXTargetDependency */,
-				46EB2E000275F0 /* PBXTargetDependency */,
-				46EB2E00027610 /* PBXTargetDependency */,
-				46EB2E00027630 /* PBXTargetDependency */,
-				46EB2E00027650 /* PBXTargetDependency */,
-				46EB2E00027670 /* PBXTargetDependency */,
-				46EB2E00027690 /* PBXTargetDependency */,
-				46EB2E000276B0 /* PBXTargetDependency */,
-				46EB2E000276D0 /* PBXTargetDependency */,
-				46EB2E000276F0 /* PBXTargetDependency */,
-				46EB2E00027710 /* PBXTargetDependency */,
-				46EB2E00027730 /* PBXTargetDependency */,
-			);
-			name = "Pods-m4uapp";
-			productName = "Pods-m4uapp";
-			productReference = 02DB1B2409F2B7C57652DD91EDD40E3F /* Pods-m4uapp */;
-			productType = "com.apple.product-type.library.static";
-		};
 		FA877ADC442CB19CF61793D234C8B131 /* React-jsi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 46EB2E00020FA0 /* Build configuration list for PBXNativeTarget "React-jsi" */;
@@ -32942,7 +32942,7 @@
 				985FEA01F314F3C00F0C1E1181E6C4A5 /* hermes-engine */,
 				47D2E85A78C25869BB13521D8561A638 /* libwebp */,
 				F783E7E9F8591E6CF73ED67143335F50 /* OneSignalXCFramework */,
-				FA7C8164C4CD671A3476363474B0765C /* Pods-m4uapp */,
+				BD66F6B17CB09E70CADDEC44BC99DEA5 /* Pods-appproject */,
 				EC55D52694092A9D0E6A78EB01207EB5 /* RCT-Folly */,
 				331AFAADB024F73370A9DC6FBD7A5A22 /* RCT-Folly-RCT-Folly_privacy */,
 				5211B5AB7B81060AA8E78614DD75D3AB /* RCTDeprecation */,
@@ -35156,7 +35156,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				46EB2E00026B60 /* Pods-m4uapp-dummy.m in Sources */,
+				46EB2E00026B60 /* Pods-appproject-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -48542,7 +48542,7 @@
 		};
 		46EB2E00026A80 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 46EB2E00026AF0 /* Pods-m4uapp.release.xcconfig */;
+			baseConfigurationReference = 46EB2E00026AF0 /* Pods-appproject.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -48566,7 +48566,7 @@
 		};
 		46EB2E00026A90 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 46EB2E00026B00 /* Pods-m4uapp.debug.xcconfig */;
+			baseConfigurationReference = 46EB2E00026B00 /* Pods-appproject.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -49517,7 +49517,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		46EB2E00026A70 /* Build configuration list for PBXNativeTarget "Pods-m4uapp" */ = {
+		46EB2E00026A70 /* Build configuration list for PBXNativeTarget "Pods-appproject" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				46EB2E00026A90 /* Debug */,
