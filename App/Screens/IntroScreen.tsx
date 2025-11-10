@@ -1,44 +1,57 @@
-import { StyleSheet, Text, View, Image, ImageBackground } from 'react-native'
-import React from 'react'
-import { ApplicationStyles, Colors, Fonts, Images, MetricsRes } from '../Themes'
+import { StyleSheet, Text, View, Image, ImageBackground } from "react-native";
+import React, { useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { ApplicationStyles, Colors, Fonts, Images, MetricsRes } from "../Themes";
 
 const IntroScreen = () => {
-  return (
-    <ImageBackground source={Images.bg_intro} style={styles.container} resizeMode="cover">
-      <Image source={Images.logo} style={styles.logo} />
-      <Text style={styles.title}>Select your language</Text>
-      <Text style={styles.subTitle}>Please choose the language you want to use on this App.</Text>
-    </ImageBackground>
-  )
-}
+    const navigation = useNavigation();
 
-export default IntroScreen
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            navigation.navigate("AuthenticationStackScreen", { screen: "LoginScreen" });
+        }, 5000); // 5 seconds
+
+        return () => clearTimeout(timer);
+    }, [navigation]);
+
+    return (
+        <ImageBackground source={Images.bg_intro} style={styles.container} resizeMode="cover">
+            <Image source={Images.logo} style={styles.logo} />
+            <Text style={styles.title}>IoT Biomedical Monitoring</Text>
+            <Text style={styles.subTitle}>Smart healthcare system for real-time patient monitoring</Text>
+        </ImageBackground>
+    );
+};
+
+export default IntroScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: MetricsRes.margin.huge,
-  },
+    container: {
+        flex: 1,
+        paddingHorizontal: MetricsRes.margin.huge,
+        alignItems: "center",
+        justifyContent: "center",
+        alignContent: "center",
+    },
 
-  logo: {
-    width: MetricsRes.screenWidth * 0.5,
-    height: MetricsRes.screenWidth * 0.5,
-    resizeMode: 'contain',
-    alignSelf: 'center',
-    marginTop: MetricsRes.screenHeight * 0.1,
-  },
-  title: {
-    fontSize: Fonts.size.h24,
-    fontFamily: ApplicationStyles.fontFamily.bold,
-    color: Colors.primary,
-    textAlign: 'center',
-    marginTop: MetricsRes.margin.base,
-  },
-  subTitle: {
-    fontSize: Fonts.size.h14,
-    fontFamily: ApplicationStyles.fontFamily.regular,
-    color: Colors.textBlack,
-    textAlign: 'center',
-    marginTop: MetricsRes.margin.base,
-  },
-})
+    logo: {
+        width: MetricsRes.screenWidth * 0.5,
+        height: MetricsRes.screenWidth * 0.5,
+        resizeMode: "contain",
+        alignSelf: "center",
+    },
+    title: {
+        fontSize: Fonts.size.h24,
+        fontFamily: ApplicationStyles.fontFamily.bold,
+        color: Colors.white,
+        textAlign: "center",
+        marginTop: MetricsRes.margin.base,
+    },
+    subTitle: {
+        fontSize: Fonts.size.h18,
+        fontFamily: ApplicationStyles.fontFamily.regular,
+        color: Colors.textBlack,
+        textAlign: "center",
+        marginTop: MetricsRes.margin.base,
+    },
+});
