@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "../Screens/AuthenticationStackScreen/LoginScreen";
+import RegisterScreen from "../Screens/AuthenticationStackScreen/RegisterScreen";
 
 const AuthenticationStack = createNativeStackNavigator();
 
@@ -15,6 +16,7 @@ const AuthenticationStackScreen = () => {
             initialRouteName={"LoginScreen"}
         >
             <AuthenticationStack.Screen name="LoginScreen" component={LoginScreen} options={{ animation: "none" }} />
+            <AuthenticationStack.Screen name="RegisterScreen" component={RegisterScreen} options={{ animation: "none" }} />
         </AuthenticationStack.Navigator>
     );
 };

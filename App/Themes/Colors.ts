@@ -1,6 +1,8 @@
 const Colors = {
     // m4u
     primary: "#F86A66",
+    error: "#F81D1D",
+    background: "#F9FAFB",
     //hoang anh delivery
     textBlack: "#1C252E",
     white: "#FFFFFF",
@@ -10,7 +12,12 @@ const Colors = {
     grey07: "#585F71",
     red: "#F81D1D",
     black: "#0F0E42",
-
+    blue: "#007AFF",
+    green: "#34C759",
+    lightGray: "#E0E0E0",
+    textGray: "#637381",
+    yellow: "#FF9500",
+    orange: "#FFCC00",
     gradient_home: ["#FAA470", "#F3792E"],
     gradient_btn_home: ["#FFB283", "#D05A10"],
 
