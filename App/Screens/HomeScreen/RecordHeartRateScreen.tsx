@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import { heartRateService } from "../../Services/heartRateService";
+
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 const RecordHeartRateScreen = () => {
@@ -10,26 +10,7 @@ const RecordHeartRateScreen = () => {
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
 
-    const handleRecord = async () => {
-        if (!heartRate || isNaN(Number(heartRate))) {
-            Alert.alert("Error", "Please enter a valid heart rate");
-            return;
-        }
-
-        try {
-            setLoading(true);
-            await heartRateService.recordHeartRate({
-                heartRate: Number(heartRate),
-                timestamp: new Date().toISOString(),
-            });
-            Alert.alert("Success", "Heart rate recorded successfully", [{ text: "OK", onPress: () => navigation.goBack() }]);
-        } catch (error) {
-            Alert.alert("Error", "Failed to record heart rate");
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const handleRecord = async () => {};
 
     return (
         <View style={styles.container}>
@@ -73,6 +54,7 @@ const styles = StyleSheet.create({
         padding: MetricsRes.margin.base,
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray || "#e0e0e0",
+        marginTop: MetricsRes.screenHeight * 0.05,
     },
     headerTitle: {
         fontSize: Fonts.size.h20,
@@ -80,7 +62,6 @@ const styles = StyleSheet.create({
         color: Colors.textBlack,
     },
     content: {
-        flex: 1,
         justifyContent: "center",
         alignItems: "center",
         padding: MetricsRes.margin.huge,

@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
 import React from "react";
-import ProfileScreen from "../Screens/AuthenticationStackScreen/ProfileScreen";
+
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import ProfileScreen from "../Screens/AuthenticationStackScreen/ProfileScreen";
 
 const ProfileStack = createNativeStackNavigator();
 

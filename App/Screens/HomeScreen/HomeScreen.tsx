@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import { heartRateService } from "../../Services/heartRateService";
+
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 const HomeScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const [latestData, setLatestData] = useState<any>(null);
     const [stats, setStats] = useState<any>(null);
     const [alerts, setAlerts] = useState<any[]>([]);
@@ -28,7 +28,7 @@ const HomeScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Heart Rate Monitor</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("Profile" as never)}>
+                <TouchableOpacity onPress={() => navigation.navigate("ProfileStackScreen", { screen: "ProfileScreen" })}>
                     <Icon name="person-circle-outline" size={32} color={Colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -85,17 +85,17 @@ const HomeScreen = () => {
 
             {/* Action Buttons */}
             <View style={styles.actionsContainer}>
-                <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={() => navigation.navigate("RecordHeartRateScreen" as never)}>
+                <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={() => navigation.navigate("HomeStackScreen", { screen: "RecordHeartRateScreen" })}>
                     <Icon name="add-circle" size={24} color={Colors.white} />
                     <Text style={styles.actionButtonText}>Record New</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HeartRateHistory" as never)}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "HeartRateHistoryScreen" })}>
                     <Icon name="time-outline" size={24} color={Colors.primary} />
                     <Text style={[styles.actionButtonText, { color: Colors.primary }]}>History</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HeartRateTrend" as never)}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "HeartRateTrendScreen" })}>
                     <Icon name="analytics-outline" size={24} color={Colors.primary} />
                     <Text style={[styles.actionButtonText, { color: Colors.primary }]}>AI Trend</Text>
                 </TouchableOpacity>
@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: MetricsRes.margin.large,
         backgroundColor: Colors.white,
+        marginTop: MetricsRes.screenHeight * 0.05,
     },
     headerTitle: {
         fontSize: Fonts.size.h24,

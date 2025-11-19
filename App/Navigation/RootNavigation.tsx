@@ -5,6 +5,7 @@ import AuthenticationStackScreen from "./AuthenticationStackScreen";
 import RootContainer from "../Global/RootContainer";
 import IntroStackScreen from "./IntroStackScreen";
 import HomeStackScreen from "./HomeStackScreen";
+import ProfileStackScreen from "./ProfileStackScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ const RootNavigation = () => {
                 <Stack.Screen name="IntroStackScreen" component={IntroStackScreen} />
                 <Stack.Screen name="AuthenticationStackScreen" component={AuthenticationStackScreen} />
                 <Stack.Screen name="HomeStackScreen" component={HomeStackScreen} />
+                <Stack.Screen name="ProfileStackScreen" component={ProfileStackScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

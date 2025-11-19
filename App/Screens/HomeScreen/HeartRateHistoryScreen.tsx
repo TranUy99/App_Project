@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import { heartRateService } from "../../Services/heartRateService";
+
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 const HeartRateHistoryScreen = () => {
@@ -15,18 +15,7 @@ const HeartRateHistoryScreen = () => {
         fetchHistory();
     }, []);
 
-    const fetchHistory = async () => {
-        try {
-            setLoading(true);
-            const response = await heartRateService.getHistory({ limit: 50 });
-            setHistory(response.data);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+    const fetchHistory = async () => {};
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -60,14 +49,7 @@ const HeartRateHistoryScreen = () => {
         </View>
     );
 
-    const handleReDiagnose = async (id: string) => {
-        try {
-            await heartRateService.reDiagnose(id);
-            fetchHistory();
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    const handleReDiagnose = async (id: string) => {};
 
     return (
         <View style={styles.container}>
@@ -97,6 +79,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray || "#e0e0e0",
+        marginTop: MetricsRes.screenHeight * 0.05,
     },
     headerTitle: {
         fontSize: Fonts.size.h20,

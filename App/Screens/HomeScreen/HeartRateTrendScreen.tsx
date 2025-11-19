@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
-import { heartRateService } from "../../Services/heartRateService";
+
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 const HeartRateTrendScreen = () => {
@@ -15,17 +15,7 @@ const HeartRateTrendScreen = () => {
         fetchTrend();
     }, [selectedPeriod]);
 
-    const fetchTrend = async () => {
-        try {
-            setLoading(true);
-            const response = await heartRateService.getTrend({ days: selectedPeriod });
-            setTrendData(response.data);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const fetchTrend = async () => {};
 
     return (
         <View style={styles.container}>
@@ -113,6 +103,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray || "#e0e0e0",
+        marginTop: MetricsRes.screenHeight * 0.05,
     },
     headerTitle: {
         fontSize: Fonts.size.h20,
