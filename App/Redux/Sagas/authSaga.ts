@@ -50,7 +50,7 @@ export function* login(action: Action): any {
     console.log("error", result.data.error);
     if (result && result.data && result.data.token !== "") {
         yield put({ type: SHOW_LOADING, payload: false });
-        yield put({ type: LOGIN_SUCCESS, payload: result.data.result });
+        yield put({ type: LOGIN_SUCCESS, payload: result.data });
     } else {
         yield put({ type: SHOW_LOADING, payload: false });
         ShowAlertFailure(result?.data?.error || "Invalid email or password");

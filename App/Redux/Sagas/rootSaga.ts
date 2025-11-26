@@ -3,6 +3,8 @@ import { LOG_OUT, POST_LOGIN_PHONE_NUMBER, LOGIN, REGISTER } from "../Actions/au
 import { logout, postLoginPhoneNumber, login, register } from "./authSaga";
 import { GET_SETTING } from "../Actions/settingAction";
 import { getSetting } from "./settingSaga";
+import { GET_LATEST_HEARTRATE_REQUEST } from "../Actions/HeartRateActions";
+import { getLatestHeartRateSaga } from "./HeartRateSaga";
 
 const rootSaga = function* () {
     yield all([
@@ -14,6 +16,8 @@ const rootSaga = function* () {
 
         //setting
         takeEvery(GET_SETTING, getSetting),
+
+        takeEvery(GET_LATEST_HEARTRATE_REQUEST, getLatestHeartRateSaga),
     ]);
 };
 

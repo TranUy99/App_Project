@@ -13,11 +13,10 @@ const RootContainer = () => {
     // cấu hình OneSignal v5 + listener
 
     const HandleCheckLogin = async () => {
-        if (isLogin) {
+        if (dataUser?.token) {
             navigation.navigate("HomeStackScreen", { screen: "HomeScreen" });
         } else {
             navigation.navigate("IntroStackScreen", { screen: "IntroScreen" });
-            // navigation.navigate("AuthenticationStackScreen", { screen: "LoginScreen" });
         }
     };
 

@@ -85,20 +85,24 @@ const HomeScreen = () => {
 
             {/* Action Buttons */}
             <View style={styles.actionsContainer}>
-                <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={() => navigation.navigate("HomeStackScreen", { screen: "RecordHeartRateScreen" })}>
-                    <Icon name="add-circle" size={24} color={Colors.white} />
-                    <Text style={styles.actionButtonText}>Record New</Text>
-                </TouchableOpacity>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "HeartRateHistoryScreen" })}>
-                    <Icon name="time-outline" size={24} color={Colors.primary} />
-                    <Text style={[styles.actionButtonText, { color: Colors.primary }]}>History</Text>
-                </TouchableOpacity>
+                <View style={styles.actionsGrid}>
+                    <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={() => navigation.navigate("HomeStackScreen", { screen: "RecordHeartRateScreen" })}>
+                        <Icon name="heart" size={20} color={Colors.white} />
+                        <Text style={styles.actionButtonText}>Record HR</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "HeartRateTrendScreen" })}>
-                    <Icon name="analytics-outline" size={24} color={Colors.primary} />
-                    <Text style={[styles.actionButtonText, { color: Colors.primary }]}>AI Trend</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "PatientDetailScreen", params: { patientId: "1" } })}>
+                        <Icon name="person" size={20} color={Colors.primary} />
+                        <Text style={[styles.actionButtonText, { color: Colors.primary }]}>Patient Detail</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate("HomeStackScreen", { screen: "HeartRateTrendScreen" })}>
+                        <Icon name="analytics-outline" size={24} color={Colors.primary} />
+                        <Text style={[styles.actionButtonText, { color: Colors.primary }]}>AI Trend</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </ScrollView>
     );
@@ -216,7 +220,14 @@ const styles = StyleSheet.create({
         margin: MetricsRes.margin.base,
         marginBottom: MetricsRes.margin.huge,
     },
+    actionsGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        marginTop: MetricsRes.margin.small,
+    },
     actionButton: {
+        width: "48%",
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
@@ -235,7 +246,7 @@ const styles = StyleSheet.create({
         marginLeft: MetricsRes.margin.small,
         fontSize: Fonts.size.h16,
         fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.white,
+        color: Colors.white, // primary button uses white; non-primary buttons override with color: Colors.primary
     },
 });
 

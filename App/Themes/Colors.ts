@@ -20,6 +20,7 @@ const Colors = {
     orange: "#FFCC00",
     gradient_home: ["#FAA470", "#F3792E"],
     gradient_btn_home: ["#FFB283", "#D05A10"],
+    purple: "#AF52DE",
 
     gray6: "#F2F2F7",
     textDisable: "#919EAB",

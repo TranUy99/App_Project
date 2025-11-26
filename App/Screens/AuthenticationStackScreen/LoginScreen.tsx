@@ -14,7 +14,7 @@ const LoginScreen = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
 
-    const { isLogin, dataUser } = useSelector(authSelector);
+    const { isLogin, isLoginSuccess } = useSelector(authSelector);
 
     const handleLogin = async () => {
         // Dispatch login action
@@ -24,10 +24,11 @@ const LoginScreen = () => {
     };
 
     useEffect(() => {
-        if (isLogin) {
+        if (isLoginSuccess) {
             navigation.navigate("HomeStackScreen", { screen: "HomeScreen" });
+            dispatch({ type: "CHANGE_STATUS_POST_LOGIN_PHONE_NUMBER" });
         }
-    }, [isLogin]);
+    }, [isLoginSuccess]);
 
     return (
         <View style={styles.container}>

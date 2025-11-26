@@ -3,7 +3,7 @@ import apisauce from "apisauce";
 //0397404101 - 12345678
 //0901136968 - 12345678
 
-// let baseURL = "http://192.168.1.178/GFC/";
+// let baseURL = "http://localhost:3000";
 let baseURL = "https://heart-rate-api-production-a3a6.up.railway.app";
 
 const create = () => {
