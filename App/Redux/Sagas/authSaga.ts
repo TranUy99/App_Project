@@ -48,7 +48,7 @@ export function* login(action: Action): any {
     console.log("login", result);
     console.log("result.data.token", result.data.token);
     console.log("error", result.data.error);
-    if (result && result.data && result.data.token !== "") {
+    if (result && result.data && result.data.token) {
         yield put({ type: SHOW_LOADING, payload: false });
         yield put({ type: LOGIN_SUCCESS, payload: result.data });
     } else {

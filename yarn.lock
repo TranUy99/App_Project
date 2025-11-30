@@ -3895,6 +3895,11 @@ get-symbol-description@^1.1.0:
     es-errors "^1.3.0"
     get-intrinsic "^1.2.6"
 
+gifted-charts-core@0.1.70:
+  version "0.1.70"
+  resolved "https://registry.yarnpkg.com/gifted-charts-core/-/gifted-charts-core-0.1.70.tgz#f1f066da32ccabbaafce6e797cdbb9e8e67e7e68"
+  integrity sha512-tkEERhj2CiRFKlbCRMvgbKy2LCg+MeAUDYWkbqCTF3lDaSojZbkDYELt0BqdEHvdufPwy+IJrOfWyu0tXSM6Mg==
+
 glob-parent@^5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"
@@ -5919,6 +5924,13 @@ react-native-gesture-handler@^2.28.0:
     hoist-non-react-statics "^3.3.0"
     invariant "^2.2.4"
 
+react-native-gifted-charts@^1.4.68:
+  version "1.4.68"
+  resolved "https://registry.yarnpkg.com/react-native-gifted-charts/-/react-native-gifted-charts-1.4.68.tgz#e9f6bada4166d49f63e3cc878f1f9a7eb41b0511"
+  integrity sha512-NEfn+wUbATxKPl1n1TmkWASgKckpJHeHVzZtgtwYichUMA6HF7v5dpOyqU+le2ZXKNHI0BH/+Zn/J1jjjg8Hng==
+  dependencies:
+    gifted-charts-core "0.1.70"
+
 react-native-image-picker@^8.2.1:
   version "8.2.1"
   resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-8.2.1.tgz#1ac7826563cbaa5d5298d9f2acc53c69805e5393"
@@ -6005,7 +6017,7 @@ react-native-splash-screen@^3.3.0:
   resolved "https://registry.yarnpkg.com/react-native-splash-screen/-/react-native-splash-screen-3.3.0.tgz#3af71ed17afe50fee69590a45aec399d071ead02"
   integrity sha512-rGjt6HkoSXxMqH4SQUJ1gnPQlPJV8+J47+4yhgTIan4bVvAwJhEeJH7wWt9hXSdH4+VfwTS0GTaflj1Tw83IhA==
 
-react-native-svg@^15.14.0:
+react-native-svg@^15.15.0:
   version "15.15.0"
   resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-15.15.0.tgz#98538da3ca7f99a86b4b9a6336494dbdf803ab32"
   integrity sha512-/Wx6F/IZ88B/GcF88bK8K7ZseJDYt+7WGaiggyzLvTowChQ8BM5idmcd4pK+6QJP6a6DmzL2sfOMukFUn/NArg==

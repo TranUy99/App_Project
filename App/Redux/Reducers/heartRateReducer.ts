@@ -1,15 +1,17 @@
-import { GET_LATEST_HEARTRATE_REQUEST, GET_LATEST_HEARTRATE_SUCCESS, GET_LATEST_HEARTRATE_FAILURE } from "../Actions/HeartRateActions";
+import { GET_LATEST_HEARTRATE_REQUEST, GET_LATEST_HEARTRATE_SUCCESS, GET_LATEST_HEARTRATE_FAILURE, GET_HISTORICAL_HEARTRATE_FAILURE, GET_HISTORICAL_HEARTRATE_SUCCESS, GET_HISTORICAL_HEARTRATE_REQUEST } from "../Actions/HeartRateActions";
 
 interface HeartRateState {
     loading: boolean;
     latestData: any;
     error: any;
+    historicalData?: any;
 }
 
 const initialState: HeartRateState = {
     loading: false,
     latestData: null,
     error: null,
+    historicalData: null,
 };
 
 const heartRateReducer = (state = initialState, { type, payload }: any) => {
@@ -33,6 +35,28 @@ const heartRateReducer = (state = initialState, { type, payload }: any) => {
                 loading: false,
                 error: payload?.data,
             };
+
+        case GET_HISTORICAL_HEARTRATE_REQUEST:
+            return {
+                ...state,
+                loading: true,
+                error: null,
+            };
+        case GET_HISTORICAL_HEARTRATE_SUCCESS:
+            console.log("payload in reducer", payload);
+            return {
+                ...state,
+                loading: false,
+                historicalData: payload,
+                error: null,
+            };
+        case GET_HISTORICAL_HEARTRATE_FAILURE:
+            return {
+                ...state,
+                loading: false,
+                error: payload?.data,
+            };
+
         default:
             return state;
     }

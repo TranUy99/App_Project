@@ -1,38 +1,75 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Dimensions } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
+import { useDispatch, useSelector } from "react-redux";
+import { authSelector, heartRateSelector } from "../../Redux/Reducers/selector";
+import { GET_HISTORICAL_HEARTRATE_REQUEST } from "../../Redux/Actions/HeartRateActions";
+import { LineChart } from "react-native-gifted-charts";
 
 const { width } = Dimensions.get("window");
 
 const HistoryScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { patientId } = route.params || {};
+    const dispatch = useDispatch();
+    const { dataUser } = useSelector(authSelector);
+
+    const { loading, latestData, error, historicalData } = useSelector(heartRateSelector);
 
     const [selectedPeriod, setSelectedPeriod] = useState<"24h" | "7d" | "30d" | "all">("24h");
     const [selectedVital, setSelectedVital] = useState<"all" | "hr" | "spo2" | "temp" | "bp">("all");
 
-    // Mock historical data
-    const historicalData = [
-        { date: "2024-01-20 08:00", hr: 75, spO2: 98, temp: 36.7, bp: "118/78", glucose: 105 },
-        { date: "2024-01-20 12:00", hr: 78, spO2: 97, temp: 36.8, bp: "120/80", glucose: 110 },
-        { date: "2024-01-20 16:00", hr: 80, spO2: 98, temp: 36.9, bp: "122/82", glucose: 115 },
-        { date: "2024-01-20 20:00", hr: 76, spO2: 97, temp: 36.8, bp: "119/79", glucose: 108 },
-        { date: "2024-01-21 00:00", hr: 72, spO2: 98, temp: 36.7, bp: "117/77", glucose: 102 },
-        { date: "2024-01-21 04:00", hr: 70, spO2: 97, temp: 36.6, bp: "115/75", glucose: 100 },
-        { date: "2024-01-21 08:00", hr: 74, spO2: 98, temp: 36.7, bp: "118/78", glucose: 106 },
-        { date: "2024-01-21 12:00", hr: 79, spO2: 97, temp: 36.9, bp: "121/81", glucose: 112 },
-    ];
+    const callApi = (period?: string) => {
+        if (dataUser?.token) {
+            dispatch({
+                type: GET_HISTORICAL_HEARTRATE_REQUEST,
+                payload: {
+                    token: dataUser.token,
+                    userId: dataUser.userId || "690b7d809c0b474d3e75ad6c",
+                    period: period || selectedPeriod,
+                },
+            });
+        }
+    };
 
-    const vitalTypes = [
-        { key: "all", label: "All Vitals", icon: "pulse" },
-        { key: "hr", label: "Heart Rate", icon: "heart", color: Colors.red },
-        { key: "spo2", label: "SpO2", icon: "water", color: Colors.blue },
-        { key: "temp", label: "Temperature", icon: "thermometer", color: Colors.green },
-        { key: "bp", label: "Blood Pressure", icon: "fitness", color: Colors.primary },
-    ];
+    useEffect(() => {
+        // call on mount and when token or selectedPeriod changes
+        callApi(selectedPeriod);
+    }, [dataUser?.token, selectedPeriod]);
+
+    // Normalize readings array from API shape (readings || preview) or empty
+    const readingsArray = useMemo(() => {
+        if (!historicalData) return [];
+        if (Array.isArray(historicalData.readings) && historicalData.readings.length) return historicalData.readings;
+        if (Array.isArray(historicalData.preview) && historicalData.preview.length) return historicalData.preview;
+        // If historicalData itself is an array (legacy), return it
+        if (Array.isArray(historicalData)) return historicalData;
+        return [];
+    }, [historicalData]);
+
+    // Compute stats (prefer API summary fields if present)
+    const stats = useMemo(() => {
+        if (!historicalData) return { avg: "-", min: "-", max: "-", count: 0 };
+        const avg = typeof historicalData.averageHR === "number" ? Number(historicalData.averageHR).toFixed(1) : null;
+        const min = typeof historicalData.minHR === "number" ? Number(historicalData.minHR).toFixed(1) : null;
+        const max = typeof historicalData.maxHR === "number" ? Number(historicalData.maxHR).toFixed(1) : null;
+        const count = historicalData.readingsCount ?? readingsArray.length;
+
+        // If API didn't provide avg/min/max, compute from readingsArray
+        if (avg !== null || min !== null || max !== null) {
+            return { avg: avg ?? "-", min: min ?? "-", max: max ?? "-", count };
+        }
+        const hrValues = readingsArray.map((r: any) => (typeof r.heartRate === "number" ? r.heartRate : typeof r.hr === "number" ? r.hr : NaN)).filter((v: any) => !Number.isNaN(v));
+        if (!hrValues.length) return { avg: "-", min: "-", max: "-", count };
+        const computedAvg = (hrValues.reduce((a: number, b: number) => a + b, 0) / hrValues.length).toFixed(1);
+        const computedMin = Math.min(...hrValues).toFixed(1);
+        const computedMax = Math.max(...hrValues).toFixed(1);
+        return { avg: computedAvg, min: computedMin, max: computedMax, count };
+    }, [historicalData, readingsArray]);
+
+    const vitalTypes = [{ key: "hr", label: "Heart Rate", icon: "heart", color: Colors.red }];
 
     const periods = [
         { key: "24h", label: "24h" },
@@ -40,6 +77,21 @@ const HistoryScreen = () => {
         { key: "30d", label: "30 Days" },
         { key: "all", label: "All Time" },
     ];
+
+    // Transform readingsArray into chart data format
+    const chartData = useMemo(() => {
+        return readingsArray.map((reading: any, index: number) => {
+            const hr = typeof reading.heartRate === "number" ? reading.heartRate : typeof reading.hr === "number" ? reading.hr : 0;
+            const timestamp = reading.timestamp || reading.date || reading.time;
+            const label = timestamp ? new Date(timestamp).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : `${index}`;
+
+            return {
+                value: Number(hr.toFixed(1)),
+                label: label,
+                dataPointText: hr.toFixed(1),
+            };
+        });
+    }, [readingsArray]);
 
     return (
         <View style={styles.container}>
@@ -49,7 +101,7 @@ const HistoryScreen = () => {
                     <Icon name="arrow-back" size={24} color={Colors.textBlack} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Vital Signs History</Text>
-                <TouchableOpacity onPress={() => {}}>
+                <TouchableOpacity onPress={() => callApi()}>
                     <Icon name="download-outline" size={24} color={Colors.primary} />
                 </TouchableOpacity>
             </View>
@@ -78,48 +130,39 @@ const HistoryScreen = () => {
                 <View style={styles.summaryContainer}>
                     <View style={styles.summaryCard}>
                         <Icon name="trending-up" size={24} color={Colors.green} />
-                        <Text style={styles.summaryValue}>Normal</Text>
-                        <Text style={styles.summaryLabel}>Trend</Text>
+                        <Text style={styles.summaryValue}>{stats.avg !== "-" ? `${stats.avg} bpm` : "-"}</Text>
+                        <Text style={styles.summaryLabel}>Average HR</Text>
                     </View>
                     <View style={styles.summaryCard}>
                         <Icon name="stats-chart" size={24} color={Colors.primary} />
-                        <Text style={styles.summaryValue}>{historicalData.length}</Text>
+                        <Text style={styles.summaryValue}>{stats.count}</Text>
                         <Text style={styles.summaryLabel}>Readings</Text>
                     </View>
                     <View style={styles.summaryCard}>
                         <Icon name="checkmark-circle" size={24} color={Colors.blue} />
-                        <Text style={styles.summaryValue}>98%</Text>
-                        <Text style={styles.summaryLabel}>In Range</Text>
+                        <Text style={styles.summaryValue}>{stats.min !== "-" ? `${stats.min}/${stats.max}` : "-"}</Text>
+                        <Text style={styles.summaryLabel}>Min / Max HR</Text>
                     </View>
                 </View>
 
-                {/* Chart Placeholder */}
+                {/* Chart Card with react-native-gifted-charts */}
                 <View style={styles.chartCard}>
-                    <Text style={styles.chartTitle}>{vitalTypes.find((v) => v.key === selectedVital)?.label || "All Vitals"} Trend</Text>
-                    <View style={styles.chartPlaceholder}>
-                        <Icon name="analytics" size={80} color={Colors.textGray + "40"} />
-                        <Text style={styles.chartPlaceholderText}>Chart visualization will appear here</Text>
-                        <Text style={styles.chartPlaceholderSubtext}>Install react-native-chart-kit for visual graphs</Text>
-                    </View>
+                    <Text style={styles.chartTitle}>{vitalTypes.find((v) => v.key === selectedVital)?.label || "Heart Rate"} Trend</Text>
+                    {chartData.length > 0 ? (
+                        <LineChart data={chartData} width={width - MetricsRes.margin.base * 4} height={180} spacing={Math.max(40, (width - 100) / Math.max(chartData.length, 1))} color={Colors.primary} thickness={2} startFillColor={Colors.primary + "40"} endFillColor={Colors.primary + "10"} areaChart curved hideDataPoints={false} dataPointsColor={Colors.primary} dataPointsRadius={4} textColor1={Colors.textGray} textFontSize={10} hideRules={false} rulesColor="#e0e0e0" rulesType="solid" initialSpacing={10} endSpacing={10} yAxisColor="#e0e0e0" xAxisColor="#e0e0e0" yAxisTextStyle={{ color: Colors.textGray, fontSize: 10 }} xAxisLabelTextStyle={{ color: Colors.textGray, fontSize: 9, width: 40, textAlign: "center" }} showVerticalLines={false} noOfSections={4} />
+                    ) : (
+                        <View style={styles.chartPlaceholder}>
+                            <Icon name="analytics" size={80} color={Colors.textGray + "40"} />
+                            <Text style={styles.chartPlaceholderText}>No chart data available</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Statistics Cards */}
                 <View style={styles.statsContainer}>
                     <View style={styles.statCard}>
                         <Text style={styles.statLabel}>Average HR</Text>
-                        <Text style={[styles.statValue, { color: Colors.red }]}>76 bpm</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Text style={styles.statLabel}>Avg SpO2</Text>
-                        <Text style={[styles.statValue, { color: Colors.blue }]}>97.6%</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Text style={styles.statLabel}>Avg Temp</Text>
-                        <Text style={[styles.statValue, { color: Colors.green }]}>36.8°C</Text>
-                    </View>
-                    <View style={styles.statCard}>
-                        <Text style={styles.statLabel}>Avg BP</Text>
-                        <Text style={[styles.statValue, { color: Colors.primary }]}>119/79</Text>
+                        <Text style={[styles.statValue, { color: Colors.red }]}>{stats.avg !== "-" ? `${stats.avg} bpm` : "-"}</Text>
                     </View>
                 </View>
 
@@ -130,29 +173,29 @@ const HistoryScreen = () => {
                     {/* Table Header */}
                     <View style={styles.tableHeader}>
                         <Text style={[styles.tableHeaderText, { flex: 2 }]}>Date & Time</Text>
-                        <Text style={styles.tableHeaderText}>HR</Text>
-                        <Text style={styles.tableHeaderText}>SpO2</Text>
-                        <Text style={styles.tableHeaderText}>Temp</Text>
-                        <Text style={styles.tableHeaderText}>BP</Text>
+
+                        <Text style={styles.tableHeaderText}>Heart Rate</Text>
                     </View>
 
                     {/* Table Rows */}
-                    {historicalData.map((reading, index) => (
-                        <View key={index} style={styles.tableRow}>
-                            <Text style={[styles.tableCell, { flex: 2 }]}>
-                                {new Date(reading.date).toLocaleDateString("vi-VN", {
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
-                            </Text>
-                            <Text style={[styles.tableCell, styles.tableCellValue]}>{reading.hr}</Text>
-                            <Text style={[styles.tableCell, styles.tableCellValue]}>{reading.spO2}%</Text>
-                            <Text style={[styles.tableCell, styles.tableCellValue]}>{reading.temp}°</Text>
-                            <Text style={[styles.tableCell, styles.tableCellValue]}>{reading.bp}</Text>
+                    {readingsArray.length === 0 ? (
+                        <View style={{ padding: MetricsRes.margin.base }}>
+                            <Text style={{ textAlign: "center", color: Colors.textGray }}>No data available for selected period.</Text>
                         </View>
-                    ))}
+                    ) : (
+                        readingsArray.map((reading: any, index: number) => {
+                            const timestamp = reading.timestamp || reading.date || reading.time || null;
+                            const hr = typeof reading.heartRate === "number" ? reading.heartRate : reading.hr;
+
+                            const dateLabel = timestamp ? new Date(timestamp).toLocaleString("vi-VN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+                            return (
+                                <View key={reading.id || index} style={styles.tableRow}>
+                                    <Text style={[styles.tableCell, { flex: 2 }]}>{dateLabel}</Text>
+                                    <Text style={[styles.tableCell, styles.tableCellValue]}>{hr !== undefined ? Number(hr).toFixed(1) : "-"}</Text>
+                                </View>
+                            );
+                        })
+                    )}
                 </View>
 
                 {/* Export Button */}

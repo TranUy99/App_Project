@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
+import { LineChart } from "react-native-gifted-charts";
 
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 import { authSelector, heartRateSelector } from "../../Redux/Reducers/selector";
-import { GET_LATEST_HEARTRATE_REQUEST } from "../../Redux/Actions/HeartRateActions";
+import { GET_HISTORICAL_HEARTRATE_REQUEST, GET_LATEST_HEARTRATE_REQUEST } from "../../Redux/Actions/HeartRateActions";
 
 const PatientDetailScreen = () => {
     const navigation = useNavigation<any>();
@@ -16,16 +17,20 @@ const PatientDetailScreen = () => {
     const { patientId } = route.params || {};
 
     const { dataUser } = useSelector(authSelector);
-    const { loading, latestData, error } = useSelector(heartRateSelector);
+    const { loading, latestData, error, historicalData } = useSelector(heartRateSelector);
 
     const [selectedTab, setSelectedTab] = useState<"vitals" | "history">("vitals");
 
+    const callApi = () => {
+        if (dataUser?.token) {
+            dispatch({ type: GET_LATEST_HEARTRATE_REQUEST, payload: { token: dataUser.token } });
+            dispatch({ type: GET_HISTORICAL_HEARTRATE_REQUEST, payload: { token: dataUser.token, userId: dataUser.userId || "690b7d809c0b474d3e75ad6c", period: "24h" } });
+        }
+    };
+
     useEffect(() => {
         // Call API khi component mount
-        if (dataUser?.token) {
-            // dispatch(getLatestHeartRate(dataUser.token));
-            dispatch({ type: GET_LATEST_HEARTRATE_REQUEST, payload: { token: dataUser.token } });
-        }
+        callApi();
 
         // Refresh data every 30 seconds
     }, []);
@@ -79,13 +84,6 @@ const PatientDetailScreen = () => {
         status: apiVitals?.severity || "unknown",
     };
 
-    const recentReadings = [
-        { time: "14:30", hr: 78, spO2: 98, temp: 36.8, bp: "120/80" },
-        { time: "14:00", hr: 76, spO2: 97, temp: 36.7, bp: "118/78" },
-        { time: "13:30", hr: 80, spO2: 98, temp: 36.9, bp: "122/82" },
-        { time: "13:00", hr: 77, spO2: 97, temp: 36.8, bp: "119/79" },
-    ];
-
     const getStatusColor = (status: string) => {
         switch (status) {
             case "critical":
@@ -102,7 +100,16 @@ const PatientDetailScreen = () => {
         }
     };
 
-    console.log("Rendered PatientDetailScreen with latestData:", latestData);
+    // Transform historical data for mini chart
+    const miniChartData = useMemo(() => {
+        if (!historicalData?.preview && !historicalData?.readings) return [];
+        const items = historicalData.readings || historicalData.preview || [];
+        return items.slice(0, 10).map((item: any) => ({
+            value: typeof item.heartRate === "number" ? item.heartRate : 0,
+        }));
+    }, [historicalData]);
+
+    console.log("Rendered PatientDetailScreen with historicalData:", historicalData);
 
     return (
         <View style={styles.container}>
@@ -114,9 +121,7 @@ const PatientDetailScreen = () => {
                 <Text style={styles.headerTitle}>Patient Details</Text>
                 <TouchableOpacity
                     onPress={() => {
-                        if (dataUser?.token) {
-                            dispatch({ type: GET_LATEST_HEARTRATE_REQUEST, payload: { token: dataUser.token } });
-                        }
+                        callApi();
                     }}
                 >
                     <Icon name="refresh" size={24} color={Colors.primary} />
@@ -271,27 +276,53 @@ const PatientDetailScreen = () => {
                     {/* Recent History */}
                     {selectedTab === "history" && (
                         <View style={styles.historyContainer}>
-                            <Text style={styles.sectionTitle}>Last 4 Hours</Text>
-                            {recentReadings.map((reading, index) => (
-                                <View key={index} style={styles.historyCard}>
-                                    <Text style={styles.historyTime}>{reading.time}</Text>
-                                    <View style={styles.historyValues}>
-                                        <Text style={styles.historyValue}>
-                                            <Icon name="heart" size={14} color={Colors.red} /> {reading.hr}
-                                        </Text>
-                                        <Text style={styles.historyValue}>
-                                            <Icon name="water" size={14} color={Colors.blue} /> {reading.spO2}%
-                                        </Text>
-                                        <Text style={styles.historyValue}>
-                                            <Icon name="thermometer" size={14} color={Colors.green} /> {reading.temp}°C
-                                        </Text>
-                                        <Text style={styles.historyValue}>
-                                            <Icon name="fitness" size={14} color={Colors.primary} /> {reading.bp}
-                                        </Text>
-                                    </View>
-                                </View>
-                            ))}
+                            <Text style={styles.sectionTitle}>Last 24 Hours</Text>
 
+                            {historicalData && historicalData.success ? (
+                                <>
+                                    <View style={styles.historySummary}>
+                                        <Text style={styles.summaryText}>Avg: {typeof historicalData.averageHR === "number" ? Number(historicalData.averageHR).toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.summaryText}>Min: {typeof historicalData.minHR === "number" ? Number(historicalData.minHR).toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.summaryText}>Max: {typeof historicalData.maxHR === "number" ? Number(historicalData.maxHR).toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.summaryText}>{historicalData.readingsCount ?? 0} readings</Text>
+                                    </View>
+
+                                    {/* Mini trend chart */}
+                                    {miniChartData.length > 0 && (
+                                        <View style={styles.miniChartContainer}>
+                                            <LineChart data={miniChartData} width={MetricsRes.screenWidth - MetricsRes.margin.base * 4} height={100} color={Colors.primary} thickness={2} curved hideDataPoints hideRules hideAxesAndRules areaChart startFillColor={Colors.primary + "40"} endFillColor={Colors.primary + "05"} />
+                                        </View>
+                                    )}
+
+                                    {(Array.isArray(historicalData.readings) && historicalData.readings.length ? historicalData.readings : Array.isArray(historicalData.preview) && historicalData.preview.length ? historicalData.preview : []).map((item: any) => (
+                                        <View key={item.id || item.timestamp} style={styles.historyCard}>
+                                            <Text style={styles.historyTime}>{item.timestamp ? new Date(item.timestamp).toLocaleString("vi-VN") : "—"}</Text>
+                                            <View style={styles.historyValues}>
+                                                <View style={styles.historyMeta}>
+                                                    <View style={[styles.dot, { backgroundColor: getStatusColor(item.status) }]} />
+                                                    <Text style={styles.historySmallLabel}>{(item.status || "unknown").toUpperCase()}</Text>
+                                                </View>
+
+                                                <Text style={styles.historyValue}>{typeof item.heartRate === "number" ? Number(item.heartRate).toFixed(1) : "-"} bpm</Text>
+
+                                                {/* optional other fields if present */}
+                                                {item.spO2 !== undefined && (
+                                                    <Text style={styles.historyValue}>
+                                                        <Icon name="water" size={14} color={Colors.blue} /> {item.spO2}%
+                                                    </Text>
+                                                )}
+                                                {item.temp !== undefined && (
+                                                    <Text style={styles.historyValue}>
+                                                        <Icon name="thermometer" size={14} color={Colors.green} /> {item.temp}°C
+                                                    </Text>
+                                                )}
+                                            </View>
+                                        </View>
+                                    ))}
+                                </>
+                            ) : (
+                                <Text style={styles.noDataText}>No historical data available</Text>
+                            )}
                             <TouchableOpacity style={styles.viewFullButton} onPress={() => navigation.navigate("HistoryScreen", { patientId })}>
                                 <Text style={styles.viewFullText}>View Full History</Text>
                                 <Icon name="arrow-forward" size={16} color={Colors.primary} />
@@ -494,7 +525,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     historyTime: {
-        fontSize: Fonts.size.h16,
+        fontSize: Fonts.size.h9,
         fontFamily: ApplicationStyles.fontFamily.bold,
         color: Colors.primary,
         width: 60,
@@ -637,6 +668,47 @@ const styles = StyleSheet.create({
         color: Colors.textBlack,
         marginLeft: MetricsRes.margin.small,
         lineHeight: 20,
+    },
+    historySummary: {
+        backgroundColor: Colors.white,
+        padding: MetricsRes.margin.base,
+        borderRadius: 12,
+        marginBottom: MetricsRes.margin.base,
+        alignItems: "center",
+    },
+    summaryText: {
+        fontSize: Fonts.size.h14,
+        fontFamily: ApplicationStyles.fontFamily.semiBold,
+        color: Colors.grey07,
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginRight: MetricsRes.margin.small,
+    },
+    historyMeta: {
+        flexDirection: "row",
+        alignItems: "center",
+        width: 100,
+    },
+    historySmallLabel: {
+        fontSize: Fonts.size.h12,
+        color: Colors.textGray,
+        marginLeft: 6,
+    },
+    noDataText: {
+        fontSize: Fonts.size.h14,
+        color: Colors.textGray,
+        textAlign: "center",
+        paddingVertical: MetricsRes.margin.base,
+    },
+    miniChartContainer: {
+        backgroundColor: Colors.white,
+        padding: MetricsRes.margin.base,
+        borderRadius: 12,
+        marginBottom: MetricsRes.margin.base,
+        alignItems: "center",
     },
 });
 

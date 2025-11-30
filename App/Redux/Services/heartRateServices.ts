@@ -7,4 +7,10 @@ export default class HeartRateService {
         let url = "api/heartrate/latest";
         return await Api.getToken(url, null, params?.token);
     }
+    async getHistoricalHeartRate(params: any) {
+        console.log("getHistoricalHeartRate params", params);
+
+        let url = "api/heartrate/history?userId=" + params?.userId + "&period=" + params?.period + "&limit=" + 100;
+        return await Api.getToken(url, null, params?.token);
+    }
 }
