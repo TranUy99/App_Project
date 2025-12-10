@@ -4,7 +4,7 @@ let Api = API.create();
 
 export default class HeartRateService {
     async getLatestHeartRate(params: any) {
-        let url = "api/heartrate/latest";
+        let url = "api/heartrate/latest?userId=69370f5851faa2087fb26fb8";
         return await Api.getToken(url, null, params?.token);
     }
     async getHistoricalHeartRate(params: any) {

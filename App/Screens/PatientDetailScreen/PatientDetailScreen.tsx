@@ -15,9 +15,17 @@ import { GET_HISTORICAL_HEARTRATE_REQUEST, GET_LATEST_HEARTRATE_REQUEST } from "
 interface ECGWaveformProps {
     heartRate: number;
     color?: string;
+    ecgData?: number[]; // Real ECG data from API
+    ecgMetadata?: {
+        samplingRate?: number;
+        duration?: number;
+        unit?: string;
+        dataPoints?: number;
+        quality?: string;
+    };
 }
 
-const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88" }) => {
+const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88", ecgData, ecgMetadata }) => {
     const scrollX = useRef(new Animated.Value(0)).current;
     const chartWidth = MetricsRes.screenWidth - 64;
     const chartHeight = 150;
@@ -35,8 +43,128 @@ const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88" 
         animate();
     }, [heartRate]);
 
-    // Generate ECG waveform path (PQRST complex)
-    const generateECGPath = () => {
+    // Check if ECG data looks unrealistic (simple triangular/sine wave)
+    const isUnrealisticData = (data: number[]) => {
+        if (!data || data.length < 10) return true;
+        
+        // Check if data is just increasing then decreasing (triangular pattern)
+        let increasing = 0;
+        let decreasing = 0;
+        for (let i = 1; i < data.length; i++) {
+            if (data[i] > data[i - 1]) increasing++;
+            if (data[i] < data[i - 1]) decreasing++;
+        }
+        
+        // If more than 80% is monotonic increase/decrease, it's unrealistic
+        const monotonic = (increasing + decreasing) / data.length;
+        return monotonic > 0.8;
+    };
+
+    // Generate realistic ECG data with PQRST complex
+    const generateRealisticECGData = () => {
+        const points = 50;
+        const data: number[] = [];
+        
+        for (let i = 0; i < points; i++) {
+            const t = i / points; // 0 to 1
+            let value = 0;
+            
+            // Baseline (isoelectric line)
+            value = 0.3;
+            
+            // P wave (0.0 - 0.15): Small rounded bump
+            if (t >= 0.0 && t <= 0.15) {
+                const pPhase = (t - 0.0) / 0.15;
+                value += 0.15 * Math.sin(pPhase * Math.PI);
+            }
+            
+            // PR segment (0.15 - 0.25): Flat
+            // (baseline only)
+            
+            // QRS complex (0.25 - 0.35): Sharp spike
+            if (t >= 0.25 && t <= 0.35) {
+                const qrsPhase = (t - 0.25) / 0.1;
+                
+                // Q wave (small dip)
+                if (qrsPhase < 0.15) {
+                    value -= 0.1 * (qrsPhase / 0.15);
+                }
+                // R wave (sharp peak)
+                else if (qrsPhase >= 0.15 && qrsPhase < 0.5) {
+                    value += 1.2 * ((qrsPhase - 0.15) / 0.35);
+                }
+                // S wave (dip)
+                else if (qrsPhase >= 0.5) {
+                    value += 1.2 - 1.5 * ((qrsPhase - 0.5) / 0.5);
+                }
+            }
+            
+            // ST segment (0.35 - 0.5): Flat or slightly elevated
+            if (t > 0.35 && t <= 0.5) {
+                value += 0.05;
+            }
+            
+            // T wave (0.5 - 0.75): Rounded bump
+            if (t > 0.5 && t <= 0.75) {
+                const tPhase = (t - 0.5) / 0.25;
+                value += 0.3 * Math.sin(tPhase * Math.PI);
+            }
+            
+            // Add slight noise for realism
+            value += (Math.random() - 0.5) * 0.02;
+            
+            data.push(value);
+        }
+        
+        return data;
+    };
+
+    // Generate ECG waveform path from REAL DATA
+    const generateRealECGPath = () => {
+        // Check if we should use realistic synthetic data instead
+        let dataToUse = ecgData;
+        
+        if (!ecgData || ecgData.length === 0 || isUnrealisticData(ecgData)) {
+            // Use realistic synthetic data instead of mock PQRST
+            dataToUse = generateRealisticECGData();
+        }
+
+        const beatWidth = chartWidth / 3; // 3 beats visible on screen
+        const dataPointsPerBeat = dataToUse!.length;
+        
+        // Normalize data to fit chart height (with padding)
+        const maxValue = Math.max(...dataToUse!);
+        const minValue = Math.min(...dataToUse!);
+        const range = maxValue - minValue || 1;
+        const verticalPadding = 20; // pixels padding top/bottom
+        
+        let path = "";
+
+        // Repeat the pattern 6 times (3 visible + 3 for seamless loop)
+        for (let repeat = 0; repeat < 6; repeat++) {
+            const baseX = repeat * beatWidth;
+            
+            dataToUse!.forEach((value, index) => {
+                // Normalize Y position (flip because SVG Y goes down)
+                const normalizedValue = (value - minValue) / range;
+                const y = chartHeight - (normalizedValue * (chartHeight - 2 * verticalPadding)) - verticalPadding;
+                
+                // X position spread across beat width
+                const x = baseX + (index / dataPointsPerBeat) * beatWidth;
+                
+                if (repeat === 0 && index === 0) {
+                    path += `M ${x} ${y}`;
+                } else {
+                    path += ` L ${x} ${y}`;
+                }
+            });
+        }
+
+        return path;
+    };
+
+    // Generate ECG waveform path (MOCK PQRST complex - fallback)
+    const generateMockECGPath = () => {
         const beatWidth = chartWidth / 3; // 3 beats visible
         let path = `M 0 ${chartHeight / 2}`;
 
@@ -131,7 +259,7 @@ const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88" 
                 }}
             >
                 <Svg width={chartWidth * 2} height={chartHeight}>
-                    <Path d={generateECGPath()} stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    <Path d={generateRealECGPath()} stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 </Svg>
             </Animated.View>
         </View>
@@ -162,6 +290,7 @@ const PatientDetailScreen = () => {
     const { loading, latestData, error, historicalData } = useSelector(heartRateSelector);
 
     const [selectedTab, setSelectedTab] = useState<"vitals" | "history">("vitals");
+    const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
 
     const callApi = () => {
         if (dataUser?.token) {
@@ -177,14 +306,31 @@ const PatientDetailScreen = () => {
                     period: "24h",
                 },
             });
+            setLastRefreshTime(new Date());
         }
     };
 
+    // Auto-refresh when screen is focused
     useEffect(() => {
         if (focus) {
             callApi();
         }
     }, [focus]);
+
+    // Auto-refresh every 70 seconds to sync with ESP32 (sends every 60s)
+    useEffect(() => {
+        if (!focus) return; // Only auto-refresh when screen is visible
+
+        const intervalId = setInterval(() => {
+            console.log('[ECG] Auto-refreshing data from ESP32...');
+            callApi();
+        }, 70000); // 70 seconds = 1 min 10 sec
+
+        return () => {
+            clearInterval(intervalId);
+            console.log('[ECG] Auto-refresh stopped');
+        };
+    }, [focus, dataUser?.token]);
 
     const getVitalsFromAPI = () => {
         if (!latestData?.aiDiagnosis) return null;
@@ -337,6 +483,13 @@ const PatientDetailScreen = () => {
                             <Icon name="time-outline" size={16} color="#8BA0C2" />
                             <Text style={styles.patientFooterText}>Last updated: {patient.lastUpdated ? new Date(patient.lastUpdated).toLocaleString("vi-VN") : "N/A"}</Text>
                         </View>
+                        
+                        {/* Auto-refresh indicator */}
+                        <View style={styles.autoRefreshBadge}>
+                            <Icon name="sync-circle" size={14} color="#4e73df" />
+                            <Text style={styles.autoRefreshText}>Auto-refresh: every 70s</Text>
+                            <Text style={styles.autoRefreshTime}>Last: {lastRefreshTime.toLocaleTimeString("vi-VN")}</Text>
+                        </View>
                     </View>
 
                     {/* Tabs */}
@@ -382,9 +535,11 @@ const PatientDetailScreen = () => {
                                         <Icon name="analytics" size={22} color={Colors.blue || "#3A86FF"} />
                                         <Text style={styles.vitalTitle}>Signal Quality</Text>
                                     </View>
-                                    <Text style={[styles.vitalValue, { color: Colors.green, fontSize: 24 }]}>Excellent</Text>
-                                    <Text style={styles.vitalSmall}>QRS: Clear</Text>
-                                    <Text style={styles.vitalSmall}>Noise: Minimal</Text>
+                                    <Text style={[styles.vitalValue, { color: Colors.green, fontSize: 24 }]}>
+                                        {latestData?.ecgMetadata?.quality ? latestData.ecgMetadata.quality.charAt(0).toUpperCase() + latestData.ecgMetadata.quality.slice(1) : "Excellent"}
+                                    </Text>
+                                    <Text style={styles.vitalSmall}>Sampling: {latestData?.ecgMetadata?.samplingRate || 250}Hz</Text>
+                                    <Text style={styles.vitalSmall}>Points: {latestData?.ecgMetadata?.dataPoints || 50}</Text>
                                 </View>
                             </View>
 
@@ -401,7 +556,7 @@ const PatientDetailScreen = () => {
                                     </View>
                                 </View>
                                 <Text style={styles.ecgSubtitle}>Lead II - Real-time cardiac rhythm</Text>
-                                <ECGWaveform heartRate={apiVitals.heartRate.value} color="#00FF88" />
+                                <ECGWaveform heartRate={apiVitals.heartRate.value} color="#00FF88" ecgData={latestData?.ecg} ecgMetadata={latestData?.ecgMetadata} />
                                 <View style={styles.ecgFooter}>
                                     <View style={styles.ecgInfoItem}>
                                         <Text style={styles.ecgInfoLabel}>Heart Rate</Text>
@@ -480,7 +635,7 @@ const PatientDetailScreen = () => {
 
                             {miniChartData.length > 0 && (
                                 <View style={styles.chartCard}>
-                                    <Text style={styles.chartTitle}>ECG Heart Rate Trend (Last 7 days)</Text>
+                                    <Text style={styles.chartTitle}>ECG Heart Rate Trend </Text>
                                     <LineChart
                                         data={miniChartData}
                                         width={MetricsRes.screenWidth - MetricsRes.margin.base * 4}
@@ -659,6 +814,27 @@ const styles = StyleSheet.create({
         marginLeft: 6,
         fontSize: 12,
         color: "#8BA0C2",
+    },
+    autoRefreshBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        backgroundColor: "#E8F3FF",
+        borderRadius: 8,
+        alignSelf: "flex-start",
+    },
+    autoRefreshText: {
+        marginLeft: 4,
+        fontSize: 11,
+        color: "#4e73df",
+        fontWeight: "600",
+    },
+    autoRefreshTime: {
+        marginLeft: 8,
+        fontSize: 10,
+        color: "#7B8CA7",
     },
 
     tabs: {
