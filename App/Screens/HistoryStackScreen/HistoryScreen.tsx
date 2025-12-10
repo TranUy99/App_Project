@@ -78,19 +78,46 @@ const HistoryScreen = () => {
         { key: "all", label: "All Time" },
     ];
 
-    // Transform readingsArray into chart data format
+    // Transform readingsArray into daily average chart data
     const chartData = useMemo(() => {
-        return readingsArray.map((reading: any, index: number) => {
-            const hr = typeof reading.heartRate === "number" ? reading.heartRate : typeof reading.hr === "number" ? reading.hr : 0;
-            const timestamp = reading.timestamp || reading.date || reading.time;
-            const label = timestamp ? new Date(timestamp).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : `${index}`;
+        if (readingsArray.length === 0) return [];
 
-            return {
-                value: Number(hr.toFixed(1)),
-                label: label,
-                dataPointText: hr.toFixed(1),
-            };
+        // Group readings by date (YYYY-MM-DD)
+        const dailyGroups: { [key: string]: number[] } = {};
+
+        readingsArray.forEach((reading: any) => {
+            const timestamp = reading.timestamp || reading.date || reading.time;
+            if (!timestamp) return;
+
+            const date = new Date(timestamp);
+            const dateKey = date.toISOString().split("T")[0]; // YYYY-MM-DD
+
+            const hr = typeof reading.heartRate === "number" ? reading.heartRate : typeof reading.hr === "number" ? reading.hr : null;
+            if (hr !== null) {
+                if (!dailyGroups[dateKey]) dailyGroups[dateKey] = [];
+                dailyGroups[dateKey].push(hr);
+            }
         });
+
+        // Compute average per day and format for chart
+        const dailyData = Object.keys(dailyGroups)
+            .sort() // chronological order
+            .map((dateKey) => {
+                const values = dailyGroups[dateKey];
+                const avgHR = values.reduce((a, b) => a + b, 0) / values.length;
+
+                // Format label: "Jan 15" or "15/01"
+                const date = new Date(dateKey);
+                const label = date.toLocaleDateString("vi-VN", { day: "numeric", month: "short" });
+
+                return {
+                    value: Number(avgHR.toFixed(1)),
+                    label: label,
+                    dataPointText: avgHR.toFixed(1),
+                };
+            });
+
+        return dailyData;
     }, [readingsArray]);
 
     return (
@@ -98,12 +125,10 @@ const HistoryScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" size={24} color={Colors.textBlack} />
+                    <Icon name="arrow-back" size={28} color={Colors.white} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Vital Signs History</Text>
-                <TouchableOpacity onPress={() => callApi()}>
-                    <Icon name="download-outline" size={24} color={Colors.primary} />
-                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Signs History</Text>
+                <View style={{ width: 28 }} />
             </View>
 
             <ScrollView>
@@ -145,11 +170,70 @@ const HistoryScreen = () => {
                     </View>
                 </View>
 
-                {/* Chart Card with react-native-gifted-charts */}
+                {/* Chart Card with daily data */}
                 <View style={styles.chartCard}>
-                    <Text style={styles.chartTitle}>{vitalTypes.find((v) => v.key === selectedVital)?.label || "Heart Rate"} Trend</Text>
+                    <Text style={styles.chartTitle}>{vitalTypes.find((v) => v.key === selectedVital)?.label || "Heart Rate"} Trend (Daily Average)</Text>
                     {chartData.length > 0 ? (
-                        <LineChart data={chartData} width={width - MetricsRes.margin.base * 4} height={180} spacing={Math.max(40, (width - 100) / Math.max(chartData.length, 1))} color={Colors.primary} thickness={2} startFillColor={Colors.primary + "40"} endFillColor={Colors.primary + "10"} areaChart curved hideDataPoints={false} dataPointsColor={Colors.primary} dataPointsRadius={4} textColor1={Colors.textGray} textFontSize={10} hideRules={false} rulesColor="#e0e0e0" rulesType="solid" initialSpacing={10} endSpacing={10} yAxisColor="#e0e0e0" xAxisColor="#e0e0e0" yAxisTextStyle={{ color: Colors.textGray, fontSize: 10 }} xAxisLabelTextStyle={{ color: Colors.textGray, fontSize: 9, width: 40, textAlign: "center" }} showVerticalLines={false} noOfSections={4} />
+                        <LineChart
+                            data={chartData}
+                            width={width - MetricsRes.margin.base * 4}
+                            height={200}
+                            spacing={Math.max(50, (width - 100) / Math.max(chartData.length, 1))}
+                            color={Colors.primary}
+                            thickness={3}
+                            startFillColor={Colors.primary + "30"}
+                            endFillColor={Colors.primary + "05"}
+                            areaChart
+                            curved
+                            hideDataPoints={false}
+                            dataPointsColor={Colors.primary}
+                            dataPointsRadius={5}
+                            textColor1={Colors.textGray}
+                            textFontSize={11}
+                            hideRules={false}
+                            rulesColor="#e0e0e0"
+                            rulesType="solid"
+                            initialSpacing={20}
+                            endSpacing={20}
+                            yAxisColor="#e0e0e0"
+                            xAxisColor="#e0e0e0"
+                            yAxisTextStyle={{ color: Colors.textGray, fontSize: 11 }}
+                            xAxisLabelTextStyle={{ color: Colors.textGray, fontSize: 10, width: 50, textAlign: "center" }}
+                            showVerticalLines={false}
+                            noOfSections={5}
+                            maxValue={stats.max !== "-" ? Math.ceil(Number(stats.max) * 1.1) : undefined}
+                            pointerConfig={{
+                                pointerStripHeight: 180,
+                                pointerStripColor: Colors.primary + "40",
+                                pointerStripWidth: 2,
+                                pointerColor: Colors.primary,
+                                radius: 6,
+                                pointerLabelWidth: 100,
+                                pointerLabelHeight: 90,
+                                activatePointersOnLongPress: true,
+                                autoAdjustPointerLabelPosition: false,
+                                pointerLabelComponent: (items: any) => {
+                                    return (
+                                        <View
+                                            style={{
+                                                height: 70,
+                                                width: 90,
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                backgroundColor: Colors.white,
+                                                borderRadius: 8,
+                                                borderWidth: 1,
+                                                borderColor: Colors.primary,
+                                                padding: 8,
+                                            }}
+                                        >
+                                            <Text style={{ color: Colors.textBlack, fontSize: 12, fontFamily: ApplicationStyles.fontFamily.bold }}>{items[0].value} bpm</Text>
+                                            <Text style={{ color: Colors.textGray, fontSize: 10, marginTop: 4 }}>{items[0].label}</Text>
+                                        </View>
+                                    );
+                                },
+                            }}
+                        />
                     ) : (
                         <View style={styles.chartPlaceholder}>
                             <Icon name="analytics" size={80} color={Colors.textGray + "40"} />
@@ -199,10 +283,6 @@ const HistoryScreen = () => {
                 </View>
 
                 {/* Export Button */}
-                <TouchableOpacity style={styles.exportButton}>
-                    <Icon name="document-text" size={20} color={Colors.white} />
-                    <Text style={styles.exportButtonText}>Export Report (PDF)</Text>
-                </TouchableOpacity>
             </ScrollView>
         </View>
     );
@@ -216,19 +296,20 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background || "#f5f5f5",
     },
     header: {
+        backgroundColor: "#4e73df",
+        paddingVertical: 18,
+        paddingHorizontal: 16,
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
-        padding: MetricsRes.margin.large,
-        backgroundColor: Colors.white,
-        marginTop: MetricsRes.screenHeight * 0.05,
-        borderBottomWidth: 1,
-        borderBottomColor: "#e0e0e0",
+        justifyContent: "space-between",
+        paddingTop: 55,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerTitle: {
-        fontSize: Fonts.size.h20,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.textBlack,
+        fontSize: 20,
+        color: "#fff",
+        fontWeight: "700",
     },
     periodContainer: {
         flexDirection: "row",

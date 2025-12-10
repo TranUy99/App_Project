@@ -4,7 +4,7 @@ import apisauce from "apisauce";
 //0901136968 - 12345678
 
 // let baseURL = "http://localhost:3000";
-let baseURL = "https://heart-rate-api-production-a3a6.up.railway.app/";
+let baseURL = "https://heart-rate-api-production.up.railway.app/";
 
 const create = () => {
     const api = apisauce.create({

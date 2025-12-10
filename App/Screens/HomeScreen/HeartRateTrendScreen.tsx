@@ -2,26 +2,42 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch, useSelector } from "react-redux";
+import { GET_HEARTRATE_TREND_REQUEST } from "../../Redux/Actions/HeartRateActions";
 
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
+import { authSelector, heartRateSelector } from "../../Redux/Reducers/selector";
 
 const HeartRateTrendScreen = () => {
-    const [trendData, setTrendData] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
     const [selectedPeriod, setSelectedPeriod] = useState(7);
     const navigation = useNavigation();
+    const dispatch = useDispatch();
+
+    const { trendData, loading } = useSelector(heartRateSelector);
+    const { dataUser } = useSelector(authSelector);
 
     useEffect(() => {
         fetchTrend();
     }, [selectedPeriod]);
 
-    const fetchTrend = async () => {};
+    const fetchTrend = async () => {
+        if (dataUser?.token) {
+            dispatch({
+                type: GET_HEARTRATE_TREND_REQUEST,
+                payload: {
+                    userId: dataUser.userid,
+                    days: selectedPeriod,
+                    token: dataUser.token,
+                },
+            });
+        }
+    };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" size={28} color={Colors.textBlack} />
+                    <Icon name="arrow-back" size={28} color={Colors.white} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>AI Trend Analysis</Text>
                 <View style={{ width: 28 }} />
@@ -41,27 +57,27 @@ const HeartRateTrendScreen = () => {
                 </View>
             ) : (
                 <ScrollView style={styles.content}>
-                    {trendData && (
+                    {trendData?.trendData && (
                         <>
                             <View style={styles.card}>
                                 <Icon name="trending-up" size={32} color={Colors.primary} />
                                 <Text style={styles.cardTitle}>Trend Overview</Text>
-                                <Text style={styles.trendText}>{trendData.trend || "Analyzing..."}</Text>
+                                <Text style={styles.trendText}>{trendData.trendData.insights || "Analyzing..."}</Text>
                             </View>
 
-                            {trendData.insights && (
+                            {trendData.trendData.insights && (
                                 <View style={styles.card}>
                                     <Icon name="bulb" size={32} color={Colors.orange} />
                                     <Text style={styles.cardTitle}>AI Insights</Text>
-                                    <Text style={styles.insightText}>{trendData.insights}</Text>
+                                    <Text style={styles.insightText}>{trendData.trendData.insights}</Text>
                                 </View>
                             )}
 
-                            {trendData.recommendations && (
+                            {trendData.trendData.recommendations && (
                                 <View style={styles.card}>
                                     <Icon name="checkmark-circle" size={32} color={Colors.green} />
                                     <Text style={styles.cardTitle}>Recommendations</Text>
-                                    {trendData.recommendations.map((rec: string, index: number) => (
+                                    {trendData.trendData.recommendations.map((rec: string, index: number) => (
                                         <View key={index} style={styles.recommendationItem}>
                                             <Icon name="chevron-forward" size={16} color={Colors.primary} />
                                             <Text style={styles.recommendationText}>{rec}</Text>
@@ -70,14 +86,14 @@ const HeartRateTrendScreen = () => {
                                 </View>
                             )}
 
-                            {trendData.statistics && (
+                            {trendData.trendData.statistics && (
                                 <View style={styles.statsGrid}>
                                     <View style={styles.statBox}>
-                                        <Text style={styles.statValue}>{trendData.statistics.average}</Text>
+                                        <Text style={styles.statValue}>{trendData.trendData.statistics.average}</Text>
                                         <Text style={styles.statLabel}>Avg BPM</Text>
                                     </View>
                                     <View style={styles.statBox}>
-                                        <Text style={styles.statValue}>{trendData.statistics.variability}</Text>
+                                        <Text style={styles.statValue}>{trendData.trendData.statistics.variability}</Text>
                                         <Text style={styles.statLabel}>Variability</Text>
                                     </View>
                                 </View>
@@ -96,19 +112,20 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background || "#f5f5f5",
     },
     header: {
+        backgroundColor: "#4e73df",
+        paddingVertical: 18,
+        paddingHorizontal: 16,
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
-        padding: MetricsRes.margin.base,
-        backgroundColor: Colors.white,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.lightGray || "#e0e0e0",
-        marginTop: MetricsRes.screenHeight * 0.05,
+        justifyContent: "space-between",
+        paddingTop: 55,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerTitle: {
-        fontSize: Fonts.size.h20,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.textBlack,
+        fontSize: 20,
+        color: "#fff",
+        fontWeight: "700",
     },
     periodSelector: {
         flexDirection: "row",

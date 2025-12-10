@@ -13,4 +13,12 @@ export default class HeartRateService {
         let url = "api/heartrate/history?userId=" + params?.userId + "&period=" + params?.period + "&limit=" + 100;
         return await Api.getToken(url, null, params?.token);
     }
+    async analyzeHeartRate(params: any) {
+        let url = "api/heartrate/analyze";
+        return await Api.postToken(url, params?.data, params?.token);
+    }
+    async getHeartRateTrend(params: any) {
+        let url = `api/heartrate/trend?userId=${params?.userId}&days=${params?.days}`;
+        return await Api.getToken(url, null, params?.token);
+    }
 }

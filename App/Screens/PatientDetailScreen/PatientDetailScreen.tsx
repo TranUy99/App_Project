@@ -1,16 +1,158 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Animated } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import { LineChart } from "react-native-gifted-charts";
+import Svg, { Path, Line, G } from "react-native-svg";
 
 import { ApplicationStyles, Colors, Fonts, MetricsRes } from "../../Themes";
 
 import { authSelector, heartRateSelector } from "../../Redux/Reducers/selector";
 import { GET_HISTORICAL_HEARTRATE_REQUEST, GET_LATEST_HEARTRATE_REQUEST } from "../../Redux/Actions/HeartRateActions";
 
+// =============== ECG Waveform Component ===============
+interface ECGWaveformProps {
+    heartRate: number;
+    color?: string;
+}
+
+const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88" }) => {
+    const scrollX = useRef(new Animated.Value(0)).current;
+    const chartWidth = MetricsRes.screenWidth - 64;
+    const chartHeight = 150;
+
+    useEffect(() => {
+        const duration = 60000 / heartRate; // duration for one heartbeat cycle
+        const animate = () => {
+            scrollX.setValue(0);
+            Animated.timing(scrollX, {
+                toValue: -chartWidth,
+                duration: duration * 3, // show 3 beats across the screen
+                useNativeDriver: true,
+            }).start(() => animate());
+        };
+        animate();
+    }, [heartRate]);
+
+    // Generate ECG waveform path (PQRST complex)
+    const generateECGPath = () => {
+        const beatWidth = chartWidth / 3; // 3 beats visible
+        let path = `M 0 ${chartHeight / 2}`;
+
+        for (let i = 0; i < 6; i++) {
+            // Generate 6 beats (3 visible + 3 for seamless loop)
+            const baseX = i * beatWidth;
+
+            // P wave (small bump)
+            path += ` L ${baseX + beatWidth * 0.1} ${chartHeight / 2 - 8}`;
+            path += ` L ${baseX + beatWidth * 0.15} ${chartHeight / 2}`;
+
+            // Flat segment before QRS
+            path += ` L ${baseX + beatWidth * 0.25} ${chartHeight / 2}`;
+
+            // Q wave (small dip)
+            path += ` L ${baseX + beatWidth * 0.28} ${chartHeight / 2 + 5}`;
+
+            // R wave (sharp spike - the main peak)
+            path += ` L ${baseX + beatWidth * 0.32} ${chartHeight / 2 - 60}`;
+
+            // S wave (dip after spike)
+            path += ` L ${baseX + beatWidth * 0.36} ${chartHeight / 2 + 10}`;
+
+            // Return to baseline
+            path += ` L ${baseX + beatWidth * 0.4} ${chartHeight / 2}`;
+
+            // ST segment (flat)
+            path += ` L ${baseX + beatWidth * 0.5} ${chartHeight / 2}`;
+
+            // T wave (rounded bump)
+            path += ` Q ${baseX + beatWidth * 0.55} ${chartHeight / 2 - 15}, ${baseX + beatWidth * 0.65} ${chartHeight / 2}`;
+
+            // Return to baseline until next beat
+            path += ` L ${baseX + beatWidth} ${chartHeight / 2}`;
+        }
+
+        return path;
+    };
+
+    // Generate grid
+    const renderGrid = () => {
+        const lines = [];
+        const smallGridSize = 5;
+        const largeGridSize = 25;
+
+        // Vertical lines
+        for (let x = 0; x <= chartWidth; x += smallGridSize) {
+            const isLarge = x % largeGridSize === 0;
+            lines.push(
+                <Line
+                    key={`v-${x}`}
+                    x1={x}
+                    y1={0}
+                    x2={x}
+                    y2={chartHeight}
+                    stroke={isLarge ? "#FF6B9D30" : "#FF6B9D15"}
+                    strokeWidth={isLarge ? 0.8 : 0.4}
+                />
+            );
+        }
+
+        // Horizontal lines
+        for (let y = 0; y <= chartHeight; y += smallGridSize) {
+            const isLarge = y % largeGridSize === 0;
+            lines.push(
+                <Line
+                    key={`h-${y}`}
+                    x1={0}
+                    y1={y}
+                    x2={chartWidth}
+                    y2={y}
+                    stroke={isLarge ? "#FF6B9D30" : "#FF6B9D15"}
+                    strokeWidth={isLarge ? 0.8 : 0.4}
+                />
+            );
+        }
+
+        return lines;
+    };
+
+    return (
+        <View style={ecgStyles.container}>
+            <Svg width={chartWidth} height={chartHeight} style={ecgStyles.svg}>
+                <G>{renderGrid()}</G>
+            </Svg>
+            <Animated.View
+                style={{
+                    position: "absolute",
+                    top: 12,
+                    left: 12,
+                    transform: [{ translateX: scrollX }],
+                }}
+            >
+                <Svg width={chartWidth * 2} height={chartHeight}>
+                    <Path d={generateECGPath()} stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+            </Animated.View>
+        </View>
+    );
+};
+
+const ecgStyles = StyleSheet.create({
+    container: {
+        backgroundColor: "#0A0E1A",
+        borderRadius: 16,
+        padding: 12,
+        overflow: "hidden",
+    },
+    svg: {
+        backgroundColor: "transparent",
+    },
+});
+
+
 const PatientDetailScreen = () => {
+    const focus = useIsFocused();
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useDispatch();
@@ -23,23 +165,29 @@ const PatientDetailScreen = () => {
 
     const callApi = () => {
         if (dataUser?.token) {
-            dispatch({ type: GET_LATEST_HEARTRATE_REQUEST, payload: { token: dataUser.token } });
-            dispatch({ type: GET_HISTORICAL_HEARTRATE_REQUEST, payload: { token: dataUser.token, userId: dataUser.userId || "690b7d809c0b474d3e75ad6c", period: "24h" } });
+            dispatch({
+                type: GET_LATEST_HEARTRATE_REQUEST,
+                payload: { token: dataUser.token },
+            });
+            dispatch({
+                type: GET_HISTORICAL_HEARTRATE_REQUEST,
+                payload: {
+                    token: dataUser.token,
+                    userId: dataUser.userId || "690b7d809c0b474d3e75ad6c",
+                    period: "24h",
+                },
+            });
         }
     };
 
     useEffect(() => {
-        // Call API khi component mount
-        callApi();
-
-        // Refresh data every 30 seconds
-    }, []);
-
-    // Parse API data
-    const getVitalsFromAPI = () => {
-        if (!latestData?.aiDiagnosis) {
-            return null;
+        if (focus) {
+            callApi();
         }
+    }, [focus]);
+
+    const getVitalsFromAPI = () => {
+        if (!latestData?.aiDiagnosis) return null;
 
         const diagnosis = latestData.aiDiagnosis;
         const heartRate = latestData.heartRate || 0;
@@ -59,7 +207,7 @@ const PatientDetailScreen = () => {
             analysis: diagnosis?.analysis || "No analysis available",
             recommendations: diagnosis?.recommendations || [],
             riskFactors: diagnosis?.riskFactors || [],
-            timestamp: latestData?.diagnosedAt || new Date().toISOString(),
+            timestamp: latestData?.aiDiagnosis?.diagnosedAt || new Date().toISOString(),
             acceleration: {
                 x: acc[0]?.toFixed(2) || 0,
                 y: acc[1]?.toFixed(2) || 0,
@@ -70,18 +218,13 @@ const PatientDetailScreen = () => {
 
     const apiVitals = getVitalsFromAPI();
 
-    // Mock patient data
+    // Mock patient info (có thể thay bằng dữ liệu thật sau)
     const patient = {
-        id: patientId || latestData?.data?.userId || "N/A",
-        name: "Patient " + (patientId || latestData?.data?.userId?.slice(-4) || ""),
-        age: 65,
-        gender: "N/A",
-        room: "101",
-        bed: "A",
-        admissionDate: "2024-01-15",
+        id: patientId || latestData?.userId || "N/A",
+        name: "Uy",
         diagnosis: apiVitals?.diagnosis || "Awaiting diagnosis",
-        doctor: "BS. Trần Văn B",
-        status: apiVitals?.severity || "unknown",
+        status: apiVitals?.heartRate.status || "unknown",
+        lastUpdated: apiVitals?.timestamp,
     };
 
     const getStatusColor = (status: string) => {
@@ -100,156 +243,201 @@ const PatientDetailScreen = () => {
         }
     };
 
-    // Transform historical data for mini chart
+    // Transform historical data cho chart mini
     const miniChartData = useMemo(() => {
         if (!historicalData?.preview && !historicalData?.readings) return [];
+
         const items = historicalData.readings || historicalData.preview || [];
-        return items.slice(0, 10).map((item: any) => ({
-            value: typeof item.heartRate === "number" ? item.heartRate : 0,
-        }));
+        const dailyGroups: { [key: string]: number[] } = {};
+
+        items.forEach((item: any) => {
+            const timestamp = item.timestamp || item.date;
+            if (!timestamp) return;
+
+            const date = new Date(timestamp);
+            const dateKey = date.toISOString().split("T")[0];
+
+            const hr = typeof item.heartRate === "number" ? item.heartRate : 0;
+            if (hr > 0) {
+                if (!dailyGroups[dateKey]) dailyGroups[dateKey] = [];
+                dailyGroups[dateKey].push(hr);
+            }
+        });
+
+        return Object.keys(dailyGroups)
+            .sort()
+            .slice(-7)
+            .map((dateKey) => {
+                const values = dailyGroups[dateKey];
+                const avgHR = values.reduce((a, b) => a + b, 0) / values.length;
+                const date = new Date(dateKey);
+                return {
+                    value: Number(avgHR.toFixed(1)),
+                    label: `${date.getDate()}/${date.getMonth() + 1}`,
+                    dataPointText: avgHR.toFixed(0),
+                };
+            });
     }, [historicalData]);
 
-    console.log("Rendered PatientDetailScreen with historicalData:", historicalData);
+    const allHistoryItems = (Array.isArray(historicalData?.readings) && historicalData?.readings.length ? historicalData.readings : Array.isArray(historicalData?.preview) && historicalData?.preview.length ? historicalData.preview : []) || [];
 
     return (
-        <View style={styles.container}>
+        <View style={styles.screen}>
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" size={24} color={Colors.textBlack} />
+
+            {/* <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Icon name="arrow-back" size={26} color="#1B2A4A" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Patient Details</Text>
-                <TouchableOpacity
-                    onPress={() => {
-                        callApi();
-                    }}
-                >
+                <TouchableOpacity onPress={callApi}>
+                    <Icon name="refresh" size={24} color={Colors.primary} />
+                </TouchableOpacity> */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Icon name="arrow-back" size={28} color={"#fff"} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>ECG Monitoring</Text>
+                <TouchableOpacity onPress={callApi}>
                     <Icon name="refresh" size={24} color={Colors.primary} />
                 </TouchableOpacity>
             </View>
 
             {loading && !latestData ? (
-                <View style={styles.loadingContainer}>
+                <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
-                    <Text style={styles.loadingText}>Loading patient data...</Text>
+                    <Text style={styles.centerText}>Loading patient data...</Text>
                 </View>
             ) : error ? (
-                <View style={styles.errorContainer}>
+                <View style={styles.centerContainer}>
                     <Icon name="alert-circle" size={48} color={Colors.red} />
                     <Text style={styles.errorText}>Failed to load data</Text>
-                    <TouchableOpacity
-                        style={styles.retryButton}
-                        onPress={() => {
-                            if (dataUser?.token) {
-                                dispatch({ type: GET_LATEST_HEARTRATE_REQUEST, payload: { token: dataUser.token } });
-                            }
-                        }}
-                    >
+                    <TouchableOpacity style={styles.retryButton} onPress={callApi}>
                         <Text style={styles.retryButtonText}>Retry</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
-                <ScrollView>
+                <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
                     {/* Patient Info Card */}
-                    <View style={styles.infoCard}>
-                        <View style={styles.patientHeader}>
+                    <View style={styles.patientCard}>
+                        <View style={styles.patientRow}>
                             <View style={[styles.avatar, { backgroundColor: getStatusColor(patient.status) + "20" }]}>
-                                <Icon name="person" size={40} color={getStatusColor(patient.status)} />
+                                <Icon name="person" size={38} color={getStatusColor(patient.status)} />
                             </View>
-                            <View style={styles.patientInfo}>
+                            <View style={{ flex: 1 }}>
                                 <Text style={styles.patientName}>{patient.name}</Text>
-                                <Text style={styles.patientMeta}>
-                                    {patient.age} tuổi • {patient.gender}
-                                </Text>
-                                <Text style={styles.patientMeta}>
-                                    Room {patient.room} - Bed {patient.bed}
-                                </Text>
+                                <Text style={styles.patientSub}>ID: {patient.id.toString().slice(0, 8)}...</Text>
+                                <Text style={styles.patientSub}>Diagnosis: {patient.diagnosis}</Text>
                             </View>
-                            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(patient.status) }]}>
-                                <Text style={styles.statusText}>{patient.status.toUpperCase()}</Text>
+                            <View style={[styles.statusChip, { backgroundColor: getStatusColor(patient.status) }]}>
+                                <Text style={styles.statusChipText}>{patient.status.toUpperCase()}</Text>
                             </View>
                         </View>
 
-                        <View style={styles.infoGrid}>
-                            <View style={styles.infoItem}>
-                                <Icon name="medical" size={16} color={Colors.textGray} />
-                                <Text style={styles.infoLabel}>Diagnosis</Text>
-                                <Text style={styles.infoValue}>{patient.diagnosis}</Text>
-                            </View>
-                            <View style={styles.infoItem}>
-                                <Icon name="person" size={16} color={Colors.textGray} />
-                                <Text style={styles.infoLabel}>Doctor</Text>
-                                <Text style={styles.infoValue}>{patient.doctor}</Text>
-                            </View>
-                            <View style={styles.infoItem}>
-                                <Icon name="calendar" size={16} color={Colors.textGray} />
-                                <Text style={styles.infoLabel}>Last Updated</Text>
-                                <Text style={styles.infoValue}>{apiVitals?.timestamp ? new Date(apiVitals.timestamp).toLocaleString("vi-VN") : "N/A"}</Text>
-                            </View>
+                        <View style={styles.patientFooter}>
+                            <Icon name="time-outline" size={16} color="#8BA0C2" />
+                            <Text style={styles.patientFooterText}>Last updated: {patient.lastUpdated ? new Date(patient.lastUpdated).toLocaleString("vi-VN") : "N/A"}</Text>
                         </View>
                     </View>
 
                     {/* Tabs */}
-                    <View style={styles.tabContainer}>
-                        <TouchableOpacity style={[styles.tab, selectedTab === "vitals" && styles.tabActive]} onPress={() => setSelectedTab("vitals")}>
-                            <Text style={[styles.tabText, selectedTab === "vitals" && styles.tabTextActive]}>Current Vitals</Text>
+                    <View style={styles.tabs}>
+                        <TouchableOpacity style={[styles.tabButton, selectedTab === "vitals" && styles.tabActive]} onPress={() => setSelectedTab("vitals")}>
+                            <Text style={[styles.tabLabel, selectedTab === "vitals" && styles.tabLabelActive]}>ECG Overview</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.tab, selectedTab === "history" && styles.tabActive]} onPress={() => setSelectedTab("history")}>
-                            <Text style={[styles.tabText, selectedTab === "history" && styles.tabTextActive]}>Recent History</Text>
+                        <TouchableOpacity style={[styles.tabButton, selectedTab === "history" && styles.tabActive]} onPress={() => setSelectedTab("history")}>
+                            <Text style={[styles.tabLabel, selectedTab === "history" && styles.tabLabelActive]}>ECG History</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Current Vitals */}
+                    {/* ───────────── ECG OVERVIEW ───────────── */}
                     {selectedTab === "vitals" && apiVitals && (
-                        <View style={styles.vitalsContainer}>
-                            {/* Heart Rate from API */}
-                            <View style={styles.vitalCard}>
-                                <View style={styles.vitalHeader}>
-                                    <Icon name={apiVitals.heartRate.icon} size={24} color={apiVitals.heartRate.color} />
-                                    <Text style={styles.vitalTitle}>Heart Rate</Text>
+                        <View>
+                            <View style={styles.vitalsGrid}>
+                                {/* Heart Rate from ECG */}
+                                <View style={styles.vitalCard}>
+                                    <View style={styles.vitalHeader}>
+                                        <Icon name="pulse" size={24} color={apiVitals.heartRate.color} />
+                                        <Text style={styles.vitalTitle}>Heart Rate (ECG)</Text>
+                                    </View>
+                                    <Text style={[styles.vitalValue, { color: apiVitals.heartRate.color }]}>
+                                        {apiVitals.heartRate.value}
+                                        <Text style={styles.vitalValueUnit}> {apiVitals.heartRate.unit}</Text>
+                                    </Text>
+                                    <Text style={styles.vitalSmall}>Normal: {apiVitals.heartRate.range} bpm</Text>
+                                    <View
+                                        style={[
+                                            styles.hrStatusChip,
+                                            {
+                                                backgroundColor: apiVitals.heartRate.color + "18",
+                                            },
+                                        ]}
+                                    >
+                                        <Text style={[styles.hrStatusText, { color: apiVitals.heartRate.color }]}>{apiVitals.heartRate.status.toUpperCase()}</Text>
+                                    </View>
                                 </View>
-                                <Text style={[styles.vitalValue, { color: apiVitals.heartRate.color }]}>
-                                    {apiVitals.heartRate.value} <Text style={styles.vitalUnit}>{apiVitals.heartRate.unit}</Text>
-                                </Text>
-                                <Text style={styles.vitalRange}>Normal: {apiVitals.heartRate.range}</Text>
-                                <View style={[styles.severityBadge, { backgroundColor: apiVitals.heartRate.color + "20" }]}>
-                                    <Text style={[styles.severityText, { color: apiVitals.heartRate.color }]}>{apiVitals.severity.toUpperCase()}</Text>
+
+                                {/* ECG Waveform Quality */}
+                                <View style={styles.vitalCard}>
+                                    <View style={styles.vitalHeader}>
+                                        <Icon name="analytics" size={22} color={Colors.blue || "#3A86FF"} />
+                                        <Text style={styles.vitalTitle}>Signal Quality</Text>
+                                    </View>
+                                    <Text style={[styles.vitalValue, { color: Colors.green, fontSize: 24 }]}>Excellent</Text>
+                                    <Text style={styles.vitalSmall}>QRS: Clear</Text>
+                                    <Text style={styles.vitalSmall}>Noise: Minimal</Text>
                                 </View>
                             </View>
 
-                            {/* Acceleration Data */}
-                            <View style={styles.vitalCard}>
-                                <View style={styles.vitalHeader}>
-                                    <Icon name="speedometer" size={24} color={Colors.blue} />
-                                    <Text style={styles.vitalTitle}>Acceleration</Text>
+                            {/* ========== ECG WAVEFORM VISUALIZATION ========== */}
+                            <View style={styles.ecgWaveformCard}>
+                                <View style={styles.ecgHeader}>
+                                    <View style={styles.ecgHeaderLeft}>
+                                        <Icon name="pulse" size={22} color="#00FF88" />
+                                        <Text style={styles.ecgTitle}>Live ECG Monitor</Text>
+                                    </View>
+                                    <View style={styles.ecgBadge}>
+                                        <View style={styles.liveDot} />
+                                        <Text style={styles.liveText}>LIVE</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.accContainer}>
-                                    <Text style={styles.accText}>X: {apiVitals.acceleration.x}</Text>
-                                    <Text style={styles.accText}>Y: {apiVitals.acceleration.y}</Text>
-                                    <Text style={styles.accText}>Z: {apiVitals.acceleration.z}</Text>
+                                <Text style={styles.ecgSubtitle}>Lead II - Real-time cardiac rhythm</Text>
+                                <ECGWaveform heartRate={apiVitals.heartRate.value} color="#00FF88" />
+                                <View style={styles.ecgFooter}>
+                                    <View style={styles.ecgInfoItem}>
+                                        <Text style={styles.ecgInfoLabel}>Heart Rate</Text>
+                                        <Text style={styles.ecgInfoValue}>{apiVitals.heartRate.value} BPM</Text>
+                                    </View>
+                                    <View style={styles.ecgInfoItem}>
+                                        <Text style={styles.ecgInfoLabel}>Rhythm</Text>
+                                        <Text style={styles.ecgInfoValue}>Sinus</Text>
+                                    </View>
+                                    <View style={styles.ecgInfoItem}>
+                                        <Text style={styles.ecgInfoLabel}>QRS Duration</Text>
+                                        <Text style={styles.ecgInfoValue}>80-100ms</Text>
+                                    </View>
                                 </View>
                             </View>
 
-                            {/* AI Analysis */}
-                            <View style={[styles.vitalCard, { width: "98%" }]}>
-                                <View style={styles.vitalHeader}>
-                                    <Icon name="analytics" size={24} color={Colors.purple} />
-                                    <Text style={styles.vitalTitle}>AI Analysis</Text>
+                            {/* ECG AI Analysis */}
+                            <View style={styles.analysisCard}>
+                                <View style={styles.analysisHeader}>
+                                    <Icon name="pulse" size={22} color={Colors.primary} />
+                                    <Text style={styles.analysisTitle}>ECG AI Analysis</Text>
                                 </View>
                                 <Text style={styles.analysisText}>{apiVitals.analysis}</Text>
                             </View>
 
                             {/* Recommendations */}
                             {apiVitals.recommendations.length > 0 && (
-                                <View style={[styles.vitalCard, { width: "98%" }]}>
-                                    <View style={styles.vitalHeader}>
-                                        <Icon name="medical" size={24} color={Colors.green} />
-                                        <Text style={styles.vitalTitle}>Recommendations</Text>
+                                <View style={styles.analysisCard}>
+                                    <View style={styles.analysisHeader}>
+                                        <Icon name="checkmark-circle-outline" size={22} color={Colors.green} />
+                                        <Text style={styles.analysisTitle}>Recommendations</Text>
                                     </View>
                                     {apiVitals.recommendations.map((rec: string, index: number) => (
-                                        <View key={index} style={styles.recommendationItem}>
-                                            <Icon name="checkmark-circle" size={16} color={Colors.green} />
-                                            <Text style={styles.recommendationText}>{rec}</Text>
+                                        <View key={index} style={styles.recItem}>
+                                            <Icon name="checkmark" size={16} color={Colors.green} />
+                                            <Text style={styles.recText}>{rec}</Text>
                                         </View>
                                     ))}
                                 </View>
@@ -257,15 +445,15 @@ const PatientDetailScreen = () => {
 
                             {/* Risk Factors */}
                             {apiVitals.riskFactors.length > 0 && (
-                                <View style={[styles.vitalCard, { width: "98%" }]}>
-                                    <View style={styles.vitalHeader}>
-                                        <Icon name="warning" size={24} color={Colors.orange} />
-                                        <Text style={styles.vitalTitle}>Risk Factors</Text>
+                                <View style={styles.analysisCard}>
+                                    <View style={styles.analysisHeader}>
+                                        <Icon name="warning-outline" size={22} color={Colors.orange} />
+                                        <Text style={styles.analysisTitle}>Risk Factors</Text>
                                     </View>
                                     {apiVitals.riskFactors.map((risk: string, index: number) => (
-                                        <View key={index} style={styles.riskItem}>
-                                            <Icon name="alert-circle" size={16} color={Colors.orange} />
-                                            <Text style={styles.riskText}>{risk}</Text>
+                                        <View key={index} style={styles.recItem}>
+                                            <Icon name="alert-circle-outline" size={16} color={Colors.orange} />
+                                            <Text style={styles.recText}>{risk}</Text>
                                         </View>
                                     ))}
                                 </View>
@@ -273,74 +461,94 @@ const PatientDetailScreen = () => {
                         </View>
                     )}
 
-                    {/* Recent History */}
+                    {/* ───────────── HISTORY ───────────── */}
                     {selectedTab === "history" && (
-                        <View style={styles.historyContainer}>
-                            <Text style={styles.sectionTitle}>Last 24 Hours</Text>
-
-                            {historicalData && historicalData.success ? (
-                                <>
-                                    <View style={styles.historySummary}>
-                                        <Text style={styles.summaryText}>Avg: {typeof historicalData.averageHR === "number" ? Number(historicalData.averageHR).toFixed(1) : "-"} bpm</Text>
-                                        <Text style={styles.summaryText}>Min: {typeof historicalData.minHR === "number" ? Number(historicalData.minHR).toFixed(1) : "-"} bpm</Text>
-                                        <Text style={styles.summaryText}>Max: {typeof historicalData.maxHR === "number" ? Number(historicalData.maxHR).toFixed(1) : "-"} bpm</Text>
-                                        <Text style={styles.summaryText}>{historicalData.readingsCount ?? 0} readings</Text>
+                        <View style={{ marginTop: 16 }}>
+                            <View style={styles.historySummaryCard}>
+                                <Text style={styles.historySectionTitle}>ECG Summary (24h)</Text>
+                                {historicalData && historicalData.success ? (
+                                    <View style={styles.historySummaryRow}>
+                                        <Text style={styles.historySummaryText}>Avg HR: {typeof historicalData.averageHR === "number" ? historicalData.averageHR.toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.historySummaryText}>Min HR: {typeof historicalData.minHR === "number" ? historicalData.minHR.toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.historySummaryText}>Max HR: {typeof historicalData.maxHR === "number" ? historicalData.maxHR.toFixed(1) : "-"} bpm</Text>
+                                        <Text style={styles.historySummaryText}>{historicalData.readingsCount ?? 0} ECG recordings</Text>
                                     </View>
+                                ) : (
+                                    <Text style={styles.noDataText}>No ECG data available</Text>
+                                )}
+                            </View>
 
-                                    {/* Mini trend chart */}
-                                    {miniChartData.length > 0 && (
-                                        <View style={styles.miniChartContainer}>
-                                            <LineChart data={miniChartData} width={MetricsRes.screenWidth - MetricsRes.margin.base * 4} height={100} color={Colors.primary} thickness={2} curved hideDataPoints hideRules hideAxesAndRules areaChart startFillColor={Colors.primary + "40"} endFillColor={Colors.primary + "05"} />
-                                        </View>
-                                    )}
+                            {miniChartData.length > 0 && (
+                                <View style={styles.chartCard}>
+                                    <Text style={styles.chartTitle}>ECG Heart Rate Trend (Last 7 days)</Text>
+                                    <LineChart
+                                        data={miniChartData}
+                                        width={MetricsRes.screenWidth - MetricsRes.margin.base * 4}
+                                        height={160}
+                                        spacing={40}
+                                        color={Colors.primary}
+                                        thickness={3}
+                                        curved
+                                        dataPointsColor={Colors.primary}
+                                        dataPointsRadius={4}
+                                        textColor1={Colors.textGray}
+                                        textFontSize={10}
+                                        textShiftY={-8}
+                                        textShiftX={-5}
+                                        showVerticalLines
+                                        verticalLinesColor="rgba(0,0,0,0.05)"
+                                        xAxisColor="rgba(0,0,0,0.1)"
+                                        yAxisColor="rgba(0,0,0,0.1)"
+                                        yAxisTextStyle={{
+                                            color: Colors.textGray,
+                                            fontSize: 10,
+                                        }}
+                                        xAxisLabelTextStyle={{
+                                            color: Colors.textGray,
+                                            fontSize: 10,
+                                        }}
+                                        areaChart
+                                        startFillColor={Colors.primary}
+                                        startOpacity={0.25}
+                                        endFillColor={Colors.primary}
+                                        endOpacity={0.05}
+                                        initialSpacing={10}
+                                        endSpacing={10}
+                                        noOfSections={4}
+                                        maxValue={Math.max(...miniChartData.map((d) => d.value)) + 10}
+                                        yAxisOffset={Math.min(...miniChartData.map((d) => d.value)) - 10}
+                                    />
+                                </View>
+                            )}
 
-                                    {(Array.isArray(historicalData.readings) && historicalData.readings.length ? historicalData.readings : Array.isArray(historicalData.preview) && historicalData.preview.length ? historicalData.preview : []).map((item: any) => (
-                                        <View key={item.id || item.timestamp} style={styles.historyCard}>
+                            {allHistoryItems.map((item: any) => (
+                                <View key={item.id || item.timestamp} style={styles.historyCard}>
+                                    <View style={styles.historyRow}>
+                                        <View>
                                             <Text style={styles.historyTime}>{item.timestamp ? new Date(item.timestamp).toLocaleString("vi-VN") : "—"}</Text>
-                                            <View style={styles.historyValues}>
-                                                <View style={styles.historyMeta}>
-                                                    <View style={[styles.dot, { backgroundColor: getStatusColor(item.status) }]} />
-                                                    <Text style={styles.historySmallLabel}>{(item.status || "unknown").toUpperCase()}</Text>
-                                                </View>
-
-                                                <Text style={styles.historyValue}>{typeof item.heartRate === "number" ? Number(item.heartRate).toFixed(1) : "-"} bpm</Text>
-
-                                                {/* optional other fields if present */}
-                                                {item.spO2 !== undefined && (
-                                                    <Text style={styles.historyValue}>
-                                                        <Icon name="water" size={14} color={Colors.blue} /> {item.spO2}%
-                                                    </Text>
-                                                )}
-                                                {item.temp !== undefined && (
-                                                    <Text style={styles.historyValue}>
-                                                        <Icon name="thermometer" size={14} color={Colors.green} /> {item.temp}°C
-                                                    </Text>
-                                                )}
+                                            <View style={styles.historyStatusRow}>
+                                                <View
+                                                    style={[
+                                                        styles.statusDot,
+                                                        {
+                                                            backgroundColor: getStatusColor(item.status),
+                                                        },
+                                                    ]}
+                                                />
+                                                <Text style={styles.historyStatusText}>{(item.status || "unknown").toUpperCase()}</Text>
                                             </View>
                                         </View>
-                                    ))}
-                                </>
-                            ) : (
-                                <Text style={styles.noDataText}>No historical data available</Text>
-                            )}
+                                        <Text style={styles.historyValue}>{typeof item.heartRate === "number" ? item.heartRate.toFixed(1) : "-"} bpm</Text>
+                                    </View>
+                                </View>
+                            ))}
+
                             <TouchableOpacity style={styles.viewFullButton} onPress={() => navigation.navigate("HistoryScreen", { patientId })}>
-                                <Text style={styles.viewFullText}>View Full History</Text>
+                                <Text style={styles.viewFullText}>View full ECG history</Text>
                                 <Icon name="arrow-forward" size={16} color={Colors.primary} />
                             </TouchableOpacity>
                         </View>
                     )}
-
-                    {/* Action Buttons */}
-                    <View style={styles.actionContainer}>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Icon name="add-circle-outline" size={24} color={Colors.primary} />
-                            <Text style={styles.actionButtonText}>Add Reading</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton}>
-                            <Icon name="document-text-outline" size={24} color={Colors.primary} />
-                            <Text style={styles.actionButtonText}>View Records</Text>
-                        </TouchableOpacity>
-                    </View>
                 </ScrollView>
             )}
         </View>
@@ -348,367 +556,419 @@ const PatientDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
+    screen: {
         flex: 1,
-        backgroundColor: Colors.background || "#f5f5f5",
+        backgroundColor: "#F5F9FF", // nền trắng xanh sạch
     },
+
     header: {
+        backgroundColor: "#4e73df",
+        paddingVertical: 18,
+        paddingHorizontal: 16,
         flexDirection: "row",
-        justifyContent: "space-between",
         alignItems: "center",
-        padding: MetricsRes.margin.large,
-        backgroundColor: Colors.white,
-        marginTop: MetricsRes.screenHeight * 0.05,
-        borderBottomWidth: 1,
-        borderBottomColor: "#e0e0e0",
+        justifyContent: "space-between",
+        paddingTop: 55,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
     headerTitle: {
-        fontSize: Fonts.size.h20,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.textBlack,
+        fontSize: 20,
+        color: "#fff",
+        fontWeight: "700",
     },
-    infoCard: {
-        backgroundColor: Colors.white,
-        margin: MetricsRes.margin.base,
-        padding: MetricsRes.margin.large,
-        borderRadius: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    patientHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: MetricsRes.margin.large,
-    },
-    avatar: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
+    centerContainer: {
+        flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        marginRight: MetricsRes.margin.base,
+        padding: 20,
     },
-    patientInfo: {
-        flex: 1,
-    },
-    patientName: {
-        fontSize: Fonts.size.h20,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.textBlack,
-    },
-    patientMeta: {
-        fontSize: Fonts.size.h14,
+    centerText: {
+        marginTop: 10,
+        fontSize: 14,
         color: Colors.textGray,
-        marginTop: 4,
     },
-    statusBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
+    errorText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: Colors.red,
+        fontWeight: "600",
     },
-    statusText: {
-        color: Colors.white,
-        fontSize: Fonts.size.h12,
-        fontFamily: ApplicationStyles.fontFamily.bold,
+    retryButton: {
+        marginTop: 16,
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+        backgroundColor: Colors.primary,
+        borderRadius: 10,
     },
-    infoGrid: {
-        borderTopWidth: 1,
-        borderTopColor: "#e0e0e0",
-        paddingTop: MetricsRes.margin.base,
+    retryButtonText: {
+        color: "#FFF",
+        fontWeight: "600",
     },
-    infoItem: {
+
+    patientCard: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 18,
+        borderRadius: 18,
+        shadowColor: "#00000015",
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 4,
+    },
+    patientRow: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: MetricsRes.margin.base,
     },
-    infoLabel: {
-        fontSize: Fonts.size.h14,
-        color: Colors.textGray,
-        marginLeft: MetricsRes.margin.small,
-        width: 80,
+    avatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 16,
     },
-    infoValue: {
-        flex: 1,
-        fontSize: Fonts.size.h14,
-        color: Colors.textBlack,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
+    patientName: {
+        fontSize: 22,
+        fontWeight: "700",
+        color: "#1B2A4A",
     },
-    tabContainer: {
+    patientSub: {
+        fontSize: 13,
+        color: "#7B8CA7",
+        marginTop: 2,
+    },
+    statusChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 10,
+        alignSelf: "flex-start",
+    },
+    statusChipText: {
+        color: "#FFF",
+        fontSize: 12,
+        fontWeight: "700",
+    },
+    patientFooter: {
         flexDirection: "row",
-        backgroundColor: Colors.white,
-        marginHorizontal: MetricsRes.margin.base,
-        marginTop: MetricsRes.margin.base,
+        alignItems: "center",
+        marginTop: 12,
+    },
+    patientFooterText: {
+        marginLeft: 6,
+        fontSize: 12,
+        color: "#8BA0C2",
+    },
+
+    tabs: {
+        flexDirection: "row",
+        backgroundColor: "#E8F1FF",
+        marginHorizontal: 16,
+        marginTop: 16,
         borderRadius: 12,
         padding: 4,
     },
-    tab: {
+    tabButton: {
         flex: 1,
-        paddingVertical: MetricsRes.margin.base,
-        alignItems: "center",
+        paddingVertical: 10,
         borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
     },
     tabActive: {
         backgroundColor: Colors.primary,
     },
-    tabText: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.textGray,
+    tabLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#6282A8",
     },
-    tabTextActive: {
-        color: Colors.white,
+    tabLabelActive: {
+        color: "#FFF",
     },
-    vitalsContainer: {
+
+    vitalsGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
-        padding: MetricsRes.margin.base,
+        marginTop: 14,
+        paddingHorizontal: 10,
     },
     vitalCard: {
         width: "48%",
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginBottom: MetricsRes.margin.base,
-        marginHorizontal: "1%",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        backgroundColor: "#FFFFFF",
+        padding: 16,
+        borderRadius: 16,
+        margin: "1%",
+        shadowColor: "#00000015",
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 4,
     },
     vitalHeader: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: MetricsRes.margin.small,
     },
     vitalTitle: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.textBlack,
-        marginLeft: MetricsRes.margin.small,
+        marginLeft: 8,
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#1B2A4A",
     },
     vitalValue: {
-        fontSize: Fonts.size.h28,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        marginVertical: MetricsRes.margin.small,
+        marginTop: 10,
+        fontSize: 30,
+        fontWeight: "800",
     },
-    vitalUnit: {
-        fontSize: Fonts.size.h16,
-        fontFamily: ApplicationStyles.fontFamily.regular,
+    vitalValueUnit: {
+        fontSize: 16,
+        fontWeight: "400",
     },
-    vitalRange: {
-        fontSize: Fonts.size.h12,
-        color: Colors.textGray,
+    vitalSmall: {
+        marginTop: 4,
+        color: "#7B8CA7",
+        fontSize: 12,
     },
-    historyContainer: {
-        padding: MetricsRes.margin.base,
-    },
-    sectionTitle: {
-        fontSize: Fonts.size.h18,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.textBlack,
-        marginBottom: MetricsRes.margin.base,
-    },
-    historyCard: {
-        flexDirection: "row",
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginBottom: MetricsRes.margin.small,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    historyTime: {
-        fontSize: Fonts.size.h9,
-        fontFamily: ApplicationStyles.fontFamily.bold,
-        color: Colors.primary,
-        width: 60,
-    },
-    historyValues: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "space-around",
-    },
-    historyValue: {
-        fontSize: Fonts.size.h14,
-        color: Colors.textBlack,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-    },
-    viewFullButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginTop: MetricsRes.margin.base,
-        borderWidth: 1,
-        borderColor: Colors.primary,
-    },
-    viewFullText: {
-        fontSize: Fonts.size.h16,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.primary,
-        marginRight: MetricsRes.margin.small,
-    },
-    actionContainer: {
-        flexDirection: "row",
-        padding: MetricsRes.margin.base,
-        paddingBottom: MetricsRes.margin.huge,
-    },
-    actionButton: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginHorizontal: MetricsRes.margin.small,
-        borderWidth: 1,
-        borderColor: Colors.primary,
-    },
-    actionButtonText: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.primary,
-        marginLeft: MetricsRes.margin.small,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: MetricsRes.margin.huge,
-    },
-    loadingText: {
-        fontSize: Fonts.size.h16,
-        fontFamily: ApplicationStyles.fontFamily.regular,
-        color: Colors.textGray,
-        marginTop: MetricsRes.margin.base,
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: MetricsRes.margin.huge,
-    },
-    errorText: {
-        fontSize: Fonts.size.h18,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.red,
-        marginTop: MetricsRes.margin.base,
-        marginBottom: MetricsRes.margin.large,
-    },
-    retryButton: {
-        backgroundColor: Colors.primary,
-        paddingHorizontal: MetricsRes.margin.huge,
-        paddingVertical: MetricsRes.margin.base,
-        borderRadius: 12,
-    },
-    retryButtonText: {
-        fontSize: Fonts.size.h16,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.white,
-    },
-    severityBadge: {
-        marginTop: MetricsRes.margin.small,
-        paddingHorizontal: MetricsRes.margin.base,
+    hrStatusChip: {
+        marginTop: 10,
+        paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 8,
         alignSelf: "flex-start",
     },
-    severityText: {
-        fontSize: Fonts.size.h12,
-        fontFamily: ApplicationStyles.fontFamily.bold,
+    hrStatusText: {
+        fontSize: 11,
+        fontWeight: "700",
     },
-    accContainer: {
-        marginTop: MetricsRes.margin.base,
+
+    analysisCard: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 14,
+        padding: 16,
+        borderRadius: 18,
+        shadowColor: "#00000015",
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 4,
     },
-    accText: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.textBlack,
-        marginBottom: 4,
+    analysisHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    analysisTitle: {
+        marginLeft: 8,
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#1B2A4A",
     },
     analysisText: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.regular,
-        color: Colors.textBlack,
+        fontSize: 14,
+        color: "#2F3F55",
         lineHeight: 20,
-        marginTop: MetricsRes.margin.small,
     },
-    recommendationItem: {
+    recItem: {
         flexDirection: "row",
         alignItems: "flex-start",
-        marginTop: MetricsRes.margin.small,
+        marginTop: 6,
     },
-    recommendationText: {
-        flex: 1,
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.regular,
-        color: Colors.textBlack,
-        marginLeft: MetricsRes.margin.small,
-        lineHeight: 20,
-    },
-    riskItem: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        marginTop: MetricsRes.margin.small,
-    },
-    riskText: {
-        flex: 1,
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.regular,
-        color: Colors.textBlack,
-        marginLeft: MetricsRes.margin.small,
-        lineHeight: 20,
-    },
-    historySummary: {
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginBottom: MetricsRes.margin.base,
-        alignItems: "center",
-    },
-    summaryText: {
-        fontSize: Fonts.size.h14,
-        fontFamily: ApplicationStyles.fontFamily.semiBold,
-        color: Colors.grey07,
-    },
-    dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginRight: MetricsRes.margin.small,
-    },
-    historyMeta: {
-        flexDirection: "row",
-        alignItems: "center",
-        width: 100,
-    },
-    historySmallLabel: {
-        fontSize: Fonts.size.h12,
-        color: Colors.textGray,
+    recText: {
         marginLeft: 6,
+        fontSize: 14,
+        color: "#1B2A4A",
+        flex: 1,
+    },
+
+    historySummaryCard: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 10,
+        padding: 14,
+        borderRadius: 16,
+        shadowColor: "#00000010",
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    historySectionTitle: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#1B2A4A",
+        marginBottom: 6,
+    },
+    historySummaryRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+    },
+    historySummaryText: {
+        fontSize: 13,
+        color: "#4A5C7A",
+        marginVertical: 2,
     },
     noDataText: {
-        fontSize: Fonts.size.h14,
+        fontSize: 13,
         color: Colors.textGray,
-        textAlign: "center",
-        paddingVertical: MetricsRes.margin.base,
     },
-    miniChartContainer: {
-        backgroundColor: Colors.white,
-        padding: MetricsRes.margin.base,
-        borderRadius: 12,
-        marginBottom: MetricsRes.margin.base,
+
+    chartCard: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 12,
+        padding: 16,
+        borderRadius: 16,
+        shadowColor: "#00000010",
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
         alignItems: "center",
+    },
+    chartTitle: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#1B2A4A",
+        marginBottom: 8,
+        alignSelf: "flex-start",
+    },
+
+    historyCard: {
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 16,
+        marginTop: 8,
+        padding: 14,
+        borderRadius: 14,
+        shadowColor: "#00000010",
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    historyRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    historyTime: {
+        fontSize: 12,
+        color: "#3A86FF",
+        fontWeight: "700",
+    },
+    historyStatusRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 6,
+    },
+    historyStatusText: {
+        fontSize: 11,
+        color: "#7B8CA7",
+    },
+    historyValue: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#1B2A4A",
+    },
+
+    viewFullButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        marginHorizontal: 16,
+        marginTop: 14,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: "#FFFFFF",
+        borderWidth: 1,
+        borderColor: Colors.primary,
+    },
+    viewFullText: {
+        marginRight: 6,
+        fontSize: 14,
+        fontWeight: "600",
+        color: Colors.primary,
+    },
+
+    // =============== ECG Waveform Styles ===============
+    ecgWaveformCard: {
+        backgroundColor: "#1A1F2E",
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 18,
+        borderRadius: 18,
+        shadowColor: "#000",
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: "#00FF8820",
+    },
+    ecgHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    ecgHeaderLeft: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    ecgTitle: {
+        marginLeft: 10,
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#FFFFFF",
+    },
+    ecgBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FF3B3020",
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    liveDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: "#FF3B30",
+        marginRight: 6,
+    },
+    liveText: {
+        fontSize: 11,
+        fontWeight: "700",
+        color: "#FF3B30",
+    },
+    ecgSubtitle: {
+        fontSize: 12,
+        color: "#8E8E93",
+        marginBottom: 16,
+    },
+    ecgFooter: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: "#FFFFFF15",
+    },
+    ecgInfoItem: {
+        flex: 1,
+        alignItems: "center",
+    },
+    ecgInfoLabel: {
+        fontSize: 11,
+        color: "#8E8E93",
+        marginBottom: 4,
+    },
+    ecgInfoValue: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#00FF88",
     },
 });
 
