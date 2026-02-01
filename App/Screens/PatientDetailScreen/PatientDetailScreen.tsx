@@ -31,16 +31,28 @@ const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88",
     const chartHeight = 150;
 
     useEffect(() => {
-        const duration = 60000 / heartRate; // duration for one heartbeat cycle
+        // Guard against division by zero - use default 72 bpm if heartRate is 0 or invalid
+        const safeHeartRate = heartRate > 0 ? heartRate : 72;
+        const duration = 60000 / safeHeartRate; // duration for one heartbeat cycle
+        
+        let animationActive = true;
         const animate = () => {
+            if (!animationActive) return;
             scrollX.setValue(0);
             Animated.timing(scrollX, {
                 toValue: -chartWidth,
                 duration: duration * 3, // show 3 beats across the screen
                 useNativeDriver: true,
-            }).start(() => animate());
+            }).start(() => {
+                if (animationActive) animate();
+            });
         };
         animate();
+        
+        // Cleanup to stop animation when component unmounts or heartRate changes
+        return () => {
+            animationActive = false;
+        };
     }, [heartRate]);
 
     // Check if ECG data looks unrealistic (simple triangular/sine wave)
@@ -164,46 +176,7 @@ const ECGWaveform: React.FC<ECGWaveformProps> = ({ heartRate, color = "#00FF88",
     };
 
     // Generate ECG waveform path (MOCK PQRST complex - fallback)
-    const generateMockECGPath = () => {
-        const beatWidth = chartWidth / 3; // 3 beats visible
-        let path = `M 0 ${chartHeight / 2}`;
-
-        for (let i = 0; i < 6; i++) {
-            // Generate 6 beats (3 visible + 3 for seamless loop)
-            const baseX = i * beatWidth;
-
-            // P wave (small bump)
-            path += ` L ${baseX + beatWidth * 0.1} ${chartHeight / 2 - 8}`;
-            path += ` L ${baseX + beatWidth * 0.15} ${chartHeight / 2}`;
-
-            // Flat segment before QRS
-            path += ` L ${baseX + beatWidth * 0.25} ${chartHeight / 2}`;
-
-            // Q wave (small dip)
-            path += ` L ${baseX + beatWidth * 0.28} ${chartHeight / 2 + 5}`;
-
-            // R wave (sharp spike - the main peak)
-            path += ` L ${baseX + beatWidth * 0.32} ${chartHeight / 2 - 60}`;
-
-            // S wave (dip after spike)
-            path += ` L ${baseX + beatWidth * 0.36} ${chartHeight / 2 + 10}`;
-
-            // Return to baseline
-            path += ` L ${baseX + beatWidth * 0.4} ${chartHeight / 2}`;
-
-            // ST segment (flat)
-            path += ` L ${baseX + beatWidth * 0.5} ${chartHeight / 2}`;
-
-            // T wave (rounded bump)
-            path += ` Q ${baseX + beatWidth * 0.55} ${chartHeight / 2 - 15}, ${baseX + beatWidth * 0.65} ${chartHeight / 2}`;
-
-            // Return to baseline until next beat
-            path += ` L ${baseX + beatWidth} ${chartHeight / 2}`;
-        }
-
-        return path;
-    };
-
+    
     // Generate grid
     const renderGrid = () => {
         const lines = [];
@@ -287,7 +260,7 @@ const PatientDetailScreen = () => {
     const { patientId } = route.params || {};
 
     const { dataUser } = useSelector(authSelector);
-    const { loading, latestData, error, historicalData } = useSelector(heartRateSelector);
+    const { loading, latestLoading, historicalLoading, latestData, error, historicalData } = useSelector(heartRateSelector);
 
     const [selectedTab, setSelectedTab] = useState<"vitals" | "history">("vitals");
     const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
@@ -333,31 +306,76 @@ const PatientDetailScreen = () => {
     }, [focus, dataUser?.token]);
 
     const getVitalsFromAPI = () => {
-        if (!latestData?.aiDiagnosis) return null;
+        // Return default vitals if no data available
+        if (!latestData) {
+            return {
+                heartRate: {
+                    value: 0,
+                    unit: "bpm",
+                    status: "unknown",
+                    icon: "heart",
+                    color: Colors.textGray,
+                    range: "60-100",
+                },
+                diagnosis: "Awaiting data...",
+                severity: "unknown",
+                analysis: "No data available from device. Please wait for ECG readings.",
+                recommendations: [],
+                riskFactors: [],
+                timestamp: new Date().toISOString(),
+                acceleration: { x: "0.00", y: "0.00", z: "0.00" },
+            };
+        }
 
         const diagnosis = latestData.aiDiagnosis;
-        const heartRate = latestData.heartRate || 0;
-        const acc = latestData.acc || [0, 0, 0];
+        const heartRate = typeof latestData.heartRate === 'number' ? latestData.heartRate : 0;
+        const acc = Array.isArray(latestData.acc) ? latestData.acc : [0, 0, 0];
+
+        // Determine status based on severity or heartRate value
+        let status = "unknown";
+        let statusColor = Colors.textGray;
+        
+        if (diagnosis?.severity) {
+            if (diagnosis.severity === "low") {
+                status = "normal";
+                statusColor = Colors.green;
+            } else if (diagnosis.severity === "medium") {
+                status = "warning";
+                statusColor = Colors.orange;
+            } else {
+                status = "critical";
+                statusColor = Colors.red;
+            }
+        } else if (heartRate > 0) {
+            // Fallback: determine status from heartRate value
+            if (heartRate >= 60 && heartRate <= 100) {
+                status = "normal";
+                statusColor = Colors.green;
+            } else if (heartRate > 100 || heartRate < 60) {
+                status = "warning";
+                statusColor = Colors.orange;
+            }
+        }
 
         return {
             heartRate: {
                 value: heartRate,
                 unit: "bpm",
-                status: diagnosis?.severity === "low" ? "normal" : diagnosis?.severity === "medium" ? "warning" : "critical",
+                status,
                 icon: "heart",
-                color: diagnosis?.severity === "low" ? Colors.green : diagnosis?.severity === "medium" ? Colors.orange : Colors.red,
+                color: statusColor,
                 range: "60-100",
             },
-            diagnosis: diagnosis?.diagnosis || "N/A",
+            diagnosis: diagnosis?.diagnosis || (heartRate > 0 ? "Normal sinus rhythm" : "Awaiting data..."),
             severity: diagnosis?.severity || "unknown",
-            analysis: diagnosis?.analysis || "No analysis available",
+            analysis: diagnosis?.analysis || (heartRate > 0 ? "Heart rate is within expected parameters." : "No analysis available. Waiting for ECG data."),
             recommendations: diagnosis?.recommendations || [],
             riskFactors: diagnosis?.riskFactors || [],
-            timestamp: latestData?.aiDiagnosis?.diagnosedAt || new Date().toISOString(),
+            timestamp: diagnosis?.diagnosedAt || latestData?.timestamp || new Date().toISOString(),
             acceleration: {
-                x: acc[0]?.toFixed(2) || 0,
-                y: acc[1]?.toFixed(2) || 0,
-                z: acc[2]?.toFixed(2) || 0,
+                x: typeof acc[0] === 'number' ? acc[0].toFixed(2) : "0.00",
+                y: typeof acc[1] === 'number' ? acc[1].toFixed(2) : "0.00",
+                z: typeof acc[2] === 'number' ? acc[2].toFixed(2) : "0.00",
             },
         };
     };
@@ -427,6 +445,9 @@ const PatientDetailScreen = () => {
 
     const allHistoryItems = (Array.isArray(historicalData?.readings) && historicalData?.readings.length ? historicalData.readings : Array.isArray(historicalData?.preview) && historicalData?.preview.length ? historicalData.preview : []) || [];
 
+
+    console.log("latestData", latestData);
+
     return (
         <View style={styles.screen}>
             {/* Header */}
@@ -448,12 +469,12 @@ const PatientDetailScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            {loading && !latestData ? (
+            {latestLoading && !latestData ? (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
                     <Text style={styles.centerText}>Loading patient data...</Text>
                 </View>
-            ) : error ? (
+            ) : error && !latestData ? (
                 <View style={styles.centerContainer}>
                     <Icon name="alert-circle" size={48} color={Colors.red} />
                     <Text style={styles.errorText}>Failed to load data</Text>
@@ -503,7 +524,7 @@ const PatientDetailScreen = () => {
                     </View>
 
                     {/* ───────────── ECG OVERVIEW ───────────── */}
-                    {selectedTab === "vitals" && apiVitals && (
+                    {selectedTab === "vitals" && (
                         <View>
                             <View style={styles.vitalsGrid}>
                                 {/* Heart Rate from ECG */}
@@ -550,10 +571,7 @@ const PatientDetailScreen = () => {
                                         <Icon name="pulse" size={22} color="#00FF88" />
                                         <Text style={styles.ecgTitle}>Live ECG Monitor</Text>
                                     </View>
-                                    <View style={styles.ecgBadge}>
-                                        <View style={styles.liveDot} />
-                                        <Text style={styles.liveText}>LIVE</Text>
-                                    </View>
+                                   
                                 </View>
                                 <Text style={styles.ecgSubtitle}>Lead II - Real-time cardiac rhythm</Text>
                                 <ECGWaveform heartRate={apiVitals.heartRate.value} color="#00FF88" ecgData={latestData?.ecg} ecgMetadata={latestData?.ecgMetadata} />

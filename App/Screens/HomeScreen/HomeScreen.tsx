@@ -95,28 +95,22 @@ const HomeScreen = () => {
 
     return (
         <View style={styles.screen}>
-            {/* Background tổng (2 lớp màu) */}
             <View style={styles.topBackground} />
             <View style={styles.bottomBackground} />
 
-            {/* Nội dung */}
             <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-                {/* HEADER */}
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.headerSubtitle}>Welcome back 👋</Text>
                         <Text style={styles.headerTitle}>Heart Rate Monitor</Text>
                     </View>
 
-                    {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate("ProfileStackScreen", { screen: "ProfileScreen" })}>
-                        <Image source={{ uri: "https://randomuser.me/api/portraits/men/32.jpg" }} style={styles.profileAvatar} />
-                    </TouchableOpacity> */}
                     <View style={styles.profileButton}>
                         <Image source={{ uri: "https://randomuser.me/api/portraits/men/32.jpg" }} style={styles.profileAvatar} />
                     </View>
                 </View>
 
-                {/* CAROUSEL */}
+              
                 <View style={styles.carouselContainer}>
                     <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} onScroll={onScroll} scrollEventThrottle={16} contentContainerStyle={{ paddingHorizontal: 10 }}>
                         {images.map((item, i) => (
@@ -131,7 +125,7 @@ const HomeScreen = () => {
                     </View>
                 </View>
 
-                {/* QUICK ACTIONS */}
+           
                 <View style={styles.actionsContainer}>
                     <Text style={styles.sectionTitle}>Quick Actions</Text>
 
